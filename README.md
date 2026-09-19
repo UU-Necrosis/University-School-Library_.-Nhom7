@@ -1,6 +1,6 @@
 ![UniLibrary Screenshot](https://i.postimg.cc/SKc6N9jd/puppet-tea.gif)
 
-[![GitHub Tag](https://img.shields.io/github/v/release/UU-Necrosis/University-School-Library_.-Nhom7)](https://github.com/UU-Necrosis/University-School-Library_.-Nhom7/tags)
+![GitHub Release](https://img.shields.io/github/v/release/UU-Necrosis/University-School-Library_.-Nhom7?style=plastic&color=97ca00&link=https%3A%2F%2Fgithub.com%2FUU-Necrosis%2FUniversity-School-Library_.-Nhom7%2Freleases)
 # Ứng dụng Quản lý Thư viện UniLibrary
     Kho dữ liệu quản lý này nhằm hỗ trợ sắp xếp và xử lý:
 
