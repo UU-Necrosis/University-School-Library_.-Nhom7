@@ -1,4 +1,4 @@
-![UniLibrary Screenshot](https://postimg.cc/DWyJx8r4)
+![UniLibrary Screenshot](https://i.postimg.cc/SKc6N9jd/puppet-tea.gif)
 
 # Ứng dụng Quản lý Thư viện UniLibrary
     Kho dữ liệu quản lý này nhằm hỗ trợ sắp xếp và xử lý:
