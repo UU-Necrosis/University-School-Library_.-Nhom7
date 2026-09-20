@@ -7,7 +7,7 @@
 | Thành phần | Công nghệ / Thư viện | Mô tả |
 | :--- | :--- | :--- |
 | **Frontend** | `Next.js` (App Router / Pages Router), `React`, `TypeScript` | Giao diện người dùng, Server-Side Rendering (SSR) / Static Site Generation (SSG) / Client Component |
-| **UI & Styling** | `Tailwind CSS`, Reusable UI Components | Thiết kế giao diện hiện đại, responsive, tổ chức component tái sử dụng |
+| **UI & Styling** | `Tailwind CSS`, Reusable UI Components | Thiết kế giao diện theo quy chuẩn Academic Clarity cố định tại [design.md](file:///c:/Users/Lenovo/University-School-Library_.-Nhom7/design.md) |
 | **Backend / API** | `NestJS`, `Node.js`, `TypeScript` | Xử lý nghiệp vụ (Business Logic), RESTful API / GraphQL, Modular Architecture |
 | **Database** | `PostgreSQL` | Cơ sở dữ liệu quan hệ (Relational Database) |
 | **ORM** | `Prisma` | Quản lý schema, migrations, type-safe database queries |
@@ -103,6 +103,7 @@ project-root/
 │   ├── package.json
 │   └── .env
 │
+├── design.md                   # Hệ thống màu sắc & Design System cố định
 └── rules.md                    # Tài liệu quy chuẩn này
 ```
 
