@@ -27,7 +27,7 @@ export default function HomePage() {
     <div className="min-h-screen flex flex-col bg-surface">
       <Header patron={mockPatron} />
 
-      <main className="w-full pt-28 flex-1">
+      <main className="w-full pt-32 flex-1">
         <HeroSearchSection patron={mockPatron} />
         <ServicesSection />
         <LiveCapacitySection />
