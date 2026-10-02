@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Image from "next/image";
+import Link from "next/link";
 import { BookItem } from "@/types/library";
+import { Badge, Button } from "@/components/ui";
 
 const mockBooks: BookItem[] = [
   {
@@ -106,12 +107,17 @@ export const CuratedResourcesSection: React.FC = () => {
             >
               <div className="p-space-md">
                 {/* Book Cover Container */}
-                <div className="relative w-full h-56 rounded-lg bg-surface-container-high overflow-hidden mb-space-md flex items-center justify-center p-space-sm">
-                  <img
-                    src={book.coverImage}
-                    alt={book.title}
-                    className="w-36 h-48 object-cover rounded shadow-md group-hover:scale-105 transition-transform duration-300"
-                  />
+                <Link
+                  href={`/tra-cuu/${book.id}`}
+                  className="relative block w-full h-56 rounded-lg bg-surface-container-high overflow-hidden mb-space-md p-space-sm"
+                >
+                  {book.coverImage && (
+                    <img
+                      src={book.coverImage}
+                      alt={book.title}
+                      className="w-36 h-48 mx-auto object-cover rounded shadow-md group-hover:scale-105 transition-transform duration-300"
+                    />
+                  )}
                   <span
                     className={`absolute top-2 left-2 rounded px-space-xs py-0.5 font-label-sm text-label-sm font-semibold ${
                       book.type === "Sách in"
@@ -125,7 +131,7 @@ export const CuratedResourcesSection: React.FC = () => {
                   >
                     {book.type}
                   </span>
-                </div>
+                </Link>
 
                 {/* Metadata */}
                 <div className="space-y-space-xs">
@@ -133,24 +139,25 @@ export const CuratedResourcesSection: React.FC = () => {
                     <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
                       {book.identifier}
                     </span>
-                    <span
-                      className={`rounded-full px-space-xs py-0.5 font-label-sm text-label-sm font-semibold ${
-                        book.status === "available"
-                          ? "bg-[#DCFCE7] text-[#166534]"
+                    <Badge
+                      variant={
+                        book.status === "available" || book.status === "print_digital"
+                          ? "success"
                           : book.status === "open_access"
-                          ? "bg-surface-container-highest text-primary"
-                          : book.status === "print_digital"
-                          ? "bg-[#DCFCE7] text-[#166534]"
-                          : "bg-[#FEF3C7] text-[#92400E]"
-                      }`}
+                          ? "primary"
+                          : "warning"
+                      }
+                      size="sm"
                     >
-                      {book.statusText}
-                    </span>
+                      {book.statusText || ""}
+                    </Badge>
                   </div>
 
-                  <h3 className="font-headline-sm text-headline-sm text-primary group-hover:text-secondary transition-colors line-clamp-2">
-                    {book.title}
-                  </h3>
+                  <Link href={`/tra-cuu/${book.id}`} className="block">
+                    <h3 className="font-headline-sm text-headline-sm text-primary group-hover:text-secondary transition-colors line-clamp-2">
+                      {book.title}
+                    </h3>
+                  </Link>
                   <p className="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">
                     {book.author}
                   </p>
@@ -165,22 +172,38 @@ export const CuratedResourcesSection: React.FC = () => {
 
               {/* Action Footer */}
               <div className="p-space-md pt-0">
-                {book.type === "Open Access" ? (
-                  <button className="w-full flex items-center justify-center gap-space-xs bg-secondary hover:bg-primary text-on-secondary font-title-sm text-title-sm py-2 rounded-lg transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">download_for_offline</span>
-                    <span>Đọc trực tuyến ngay</span>
-                  </button>
-                ) : book.status === "borrowed_out" ? (
-                  <button className="w-full flex items-center justify-center gap-space-xs bg-surface-container-high hover:bg-secondary hover:text-on-secondary text-primary font-title-sm text-title-sm py-2 rounded-lg transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">event_seat</span>
-                    <span>Đặt hàng xếp hàng (Hold)</span>
-                  </button>
-                ) : (
-                  <button className="w-full flex items-center justify-center gap-space-xs bg-surface-container hover:bg-secondary hover:text-on-secondary text-primary font-title-sm text-title-sm py-2 rounded-lg transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">bookmark_add</span>
-                    <span>Xem chi tiết & Đặt mượn</span>
-                  </button>
-                )}
+                <Link href={`/tra-cuu/${book.id}`} className="block w-full">
+                  {book.type === "Open Access" ? (
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      fullWidth
+                      icon="download_for_offline"
+                    >
+                      Đọc trực tuyến ngay
+                    </Button>
+                  ) : book.status === "borrowed_out" ? (
+                    <Button
+                      variant="outline"
+                      size="md"
+                      fullWidth
+                      icon="event_seat"
+                      className="bg-surface-container-high text-primary hover:bg-secondary hover:text-on-secondary"
+                    >
+                      Đặt hàng xếp hàng (Hold)
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="md"
+                      fullWidth
+                      icon="bookmark_add"
+                      className="bg-surface-container text-primary hover:bg-secondary hover:text-on-secondary"
+                    >
+                      Xem chi tiết & Đặt mượn
+                    </Button>
+                  )}
+                </Link>
               </div>
             </div>
           ))}

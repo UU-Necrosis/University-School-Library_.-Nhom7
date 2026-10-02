@@ -1,25 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
-
-interface BookItem {
-  id: string;
-  title: string;
-  author: string;
-  year: number;
-  publisher: string;
-  callNumber: string;
-  isbn: string;
-  format: "Sách in" | "Ebook PDF" | "Luận án TS" | "Open Access";
-  available: boolean;
-  totalCopies: number;
-  availableCopies: number;
-  location: string;
-  coverImage?: string;
-}
+import { Breadcrumb, Badge, Button } from "@/components/ui";
+import { BookItem } from "@/types/library";
 
 const mockBooks: BookItem[] = [
   {
@@ -90,10 +76,10 @@ export default function OpacSearchPage() {
     const matchTerm =
       book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.callNumber.toLowerCase().includes(searchTerm.toLowerCase());
+      (book.callNumber && book.callNumber.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchFormat = selectedFormat === "all" || book.format === selectedFormat;
-    const matchAvail = !availabilityOnly || book.available;
+    const matchAvail = !availabilityOnly || Boolean(book.available);
 
     return matchTerm && matchFormat && matchAvail;
   });
@@ -107,14 +93,12 @@ export default function OpacSearchPage() {
         <section className="bg-surface-container-low py-space-xl px-space-md lg:px-margin border-b border-outline-variant/30">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
-              <Link href="/" className="hover:text-secondary flex items-center gap-space-xs transition-colors">
-                <span className="material-symbols-outlined text-[16px]">home</span>
-                <span>Trang chủ</span>
-              </Link>
-              <span className="text-outline-variant">/</span>
-              <span className="text-primary font-semibold">Tra cứu & Danh mục học thuật (OPAC)</span>
-            </nav>
+            <Breadcrumb
+              items={[
+                { label: "Trang chủ", href: "/", icon: "home" },
+                { label: "Tra cứu & Danh mục học thuật (OPAC)" },
+              ]}
+            />
 
             <div className="flex flex-col gap-space-xs mt-space-xs">
               <h1 className="font-headline-lg text-headline-lg text-primary font-semibold tracking-tight">
@@ -157,16 +141,16 @@ export default function OpacSearchPage() {
                     <button
                       onClick={() => setSearchTerm("")}
                       className="absolute right-space-sm text-outline hover:text-on-surface transition-colors p-1"
+                      aria-label="Xóa từ khóa"
                     >
                       <span className="material-symbols-outlined text-[18px]">close</span>
                     </button>
                   )}
                 </div>
 
-                <button className="h-12 px-space-xl bg-secondary text-on-secondary font-title-sm text-title-sm rounded-md hover:bg-secondary-container transition-colors flex items-center justify-center gap-space-xs">
-                  <span className="material-symbols-outlined text-[20px]">search</span>
-                  <span>Tìm kiếm</span>
-                </button>
+                <Button variant="secondary" size="lg" icon="search" className="h-12 px-space-xl">
+                  Tìm kiếm
+                </Button>
               </div>
 
               {/* Scope Tags */}
@@ -251,28 +235,32 @@ export default function OpacSearchPage() {
                   className="bg-surface-container-lowest rounded-xl p-space-md border border-outline-variant/40 hover:border-secondary transition-all shadow-sm flex flex-col md:flex-row gap-space-md"
                 >
                   {/* Book Cover Placeholder */}
-                  <div className="w-24 h-32 bg-primary/10 rounded-lg flex-shrink-0 flex flex-col items-center justify-center text-primary font-bold border border-primary/20 text-center p-2">
+                  <Link
+                    href={`/tra-cuu/${book.id}`}
+                    className="w-24 h-32 bg-primary/10 rounded-lg flex-shrink-0 flex flex-col items-center justify-center text-primary font-bold border border-primary/20 text-center p-2 hover:bg-primary/20 transition-colors"
+                  >
                     <span className="material-symbols-outlined text-[32px] mb-1">menu_book</span>
                     <span className="text-[10px] uppercase font-mono">{book.format}</span>
-                  </div>
+                  </Link>
 
                   {/* Book Info */}
                   <div className="flex-1 flex flex-col justify-between gap-space-xs">
                     <div>
                       <div className="flex items-center gap-space-xs mb-1">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          book.available
-                            ? "bg-green-100 text-green-800 border border-green-300"
-                            : "bg-red-100 text-red-800 border border-red-300"
-                        }`}>
+                        <Badge
+                          variant={book.available ? "success" : "danger"}
+                          size="sm"
+                        >
                           {book.available ? `Có sẵn (${book.availableCopies}/${book.totalCopies})` : "Đã mượn hết"}
-                        </span>
+                        </Badge>
                         <span className="text-xs text-on-surface-variant font-mono">{book.callNumber}</span>
                       </div>
 
-                      <h2 className="font-headline-sm text-headline-sm text-primary font-semibold hover:text-secondary cursor-pointer">
-                        {book.title}
-                      </h2>
+                      <Link href={`/tra-cuu/${book.id}`}>
+                        <h2 className="font-headline-sm text-headline-sm text-primary font-semibold hover:text-secondary cursor-pointer">
+                          {book.title}
+                        </h2>
+                      </Link>
                       <p className="font-body-md text-body-md text-on-surface-variant mt-1">
                         Tác giả: <strong className="text-on-surface">{book.author}</strong> • Năm xuất bản: {book.year}
                       </p>
@@ -287,12 +275,12 @@ export default function OpacSearchPage() {
                         {book.location}
                       </span>
                       <div className="flex items-center gap-space-xs">
-                        <button className="px-space-md py-1.5 rounded-md bg-secondary text-on-secondary font-title-sm text-title-sm hover:bg-secondary-container transition-colors">
-                          Đặt mượn ngay
-                        </button>
-                        <button className="px-space-sm py-1.5 rounded-md border border-outline-variant text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors">
-                          <span className="material-symbols-outlined text-[18px]">bookmark</span>
-                        </button>
+                        <Link href={`/tra-cuu/${book.id}`}>
+                          <Button variant="secondary" size="sm">
+                            {book.available ? "Đặt mượn ngay" : "Xem chi tiết & Đặt trước"}
+                          </Button>
+                        </Link>
+                        <Button variant="outline" size="sm" icon="bookmark" aria-label="Lưu tài liệu" />
                       </div>
                     </div>
                   </div>

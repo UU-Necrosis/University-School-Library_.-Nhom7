@@ -3,15 +3,8 @@
 import React, { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
-
-interface RuleSection {
-  id: string;
-  category: string;
-  title: string;
-  summary: string;
-  content: string[];
-}
+import { Breadcrumb } from "@/components/ui";
+import { RuleSection } from "@/types/library";
 
 const mockRules: RuleSection[] = [
   {
@@ -63,14 +56,12 @@ export default function LibraryRulesPage() {
         {/* Banner Section */}
         <section className="bg-surface-container-low border-b border-outline-variant/30 py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
-            <nav className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
-              <Link href="/" className="hover:text-secondary flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-[16px]">home</span>
-                <span>Trang chủ</span>
-              </Link>
-              <span className="text-outline-variant">/</span>
-              <span className="text-primary font-semibold">Hướng dẫn & Quy định Thư viện</span>
-            </nav>
+            <Breadcrumb
+              items={[
+                { label: "Trang chủ", href: "/", icon: "home" },
+                { label: "Hướng dẫn & Quy định Thư viện" },
+              ]}
+            />
 
             <div className="flex flex-col gap-space-xs">
               <h1 className="font-headline-lg text-headline-lg text-primary font-semibold tracking-tight">

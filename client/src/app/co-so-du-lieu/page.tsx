@@ -3,18 +3,8 @@
 import React, { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
-
-interface DatabaseItem {
-  id: string;
-  name: string;
-  publisher: string;
-  category: string;
-  description: string;
-  accessType: "SSO Direct" | "Proxy IP ĐHQG" | "Tài khoản Cán bộ";
-  journalsCount: string;
-  coverage: string;
-}
+import { Breadcrumb, Badge, Button } from "@/components/ui";
+import { DatabaseItem } from "@/types/library";
 
 const mockDatabases: DatabaseItem[] = [
   {
@@ -80,14 +70,13 @@ export default function DatabasesPage() {
         {/* Banner Section */}
         <section className="bg-primary text-on-primary py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
-            <nav className="flex items-center gap-space-xs font-label-md text-label-md text-primary-fixed">
-              <Link href="/" className="hover:underline flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-[16px]">home</span>
-                <span>Trang chủ</span>
-              </Link>
-              <span className="opacity-60">/</span>
-              <span className="text-white font-semibold">Cơ sở Dữ liệu Số & Nhà xuất bản</span>
-            </nav>
+            <Breadcrumb
+              variant="dark"
+              items={[
+                { label: "Trang chủ", href: "/", icon: "home" },
+                { label: "Cơ sở Dữ liệu Số & Nhà xuất bản" },
+              ]}
+            />
 
             <div className="flex flex-col gap-space-xs">
               <h1 className="font-headline-lg text-headline-lg font-semibold tracking-tight">
@@ -99,9 +88,9 @@ export default function DatabasesPage() {
             </div>
 
             {/* Filter Search */}
-            <div className="mt-space-md bg-white rounded-xl p-space-sm shadow-lg flex flex-col md:flex-row items-center gap-space-sm text-on-surface">
+            <div className="mt-space-md bg-surface-container-lowest rounded-xl p-space-sm shadow-lg flex flex-col md:flex-row items-center gap-space-sm text-on-surface">
               <div className="relative flex-1 w-full flex items-center">
-                <span className="material-symbols-outlined absolute left-space-md text-slate-400">search</span>
+                <span className="material-symbols-outlined absolute left-space-md text-on-surface-variant">search</span>
                 <input
                   type="text"
                   value={searchTerm}
@@ -114,7 +103,7 @@ export default function DatabasesPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="h-12 px-space-md bg-slate-100 font-title-sm text-primary rounded-lg focus:outline-none cursor-pointer w-full md:w-auto"
+                className="h-12 px-space-md bg-surface-container-low font-title-sm text-primary rounded-lg focus:outline-none cursor-pointer w-full md:w-auto"
               >
                 <option value="all">Tất cả ngành học</option>
                 <option value="STEM">STEM & Công nghệ</option>
@@ -133,7 +122,7 @@ export default function DatabasesPage() {
               Danh mục Cơ sở Dữ liệu Khả dụng ({filteredDatabases.length})
             </h2>
             <div className="flex items-center gap-2 font-label-md text-label-md text-on-surface-variant">
-              <span className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse"></span>
               <span>Proxy ĐHQG Online 24/7</span>
             </div>
           </div>
@@ -146,9 +135,9 @@ export default function DatabasesPage() {
               >
                 <div className="space-y-space-xs">
                   <div className="flex items-center justify-between gap-space-xs">
-                    <span className="px-space-sm py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-sm text-label-sm font-semibold">
+                    <Badge variant="primary" size="sm">
                       {db.category}
-                    </span>
+                    </Badge>
                     <span className="text-xs font-mono text-secondary font-bold flex items-center gap-1">
                       <span className="material-symbols-outlined text-[14px]">lock_open</span>
                       {db.accessType}
@@ -170,10 +159,9 @@ export default function DatabasesPage() {
                   <div className="text-xs font-mono text-on-surface-variant">
                     Quy mô: <strong>{db.journalsCount}</strong> • Phạm vi: {db.coverage}
                   </div>
-                  <button className="px-space-md py-2 rounded-lg bg-secondary text-on-secondary font-title-sm text-title-sm hover:bg-secondary-container transition-colors flex items-center gap-1">
-                    <span>Truy cập CSDL</span>
-                    <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                  </button>
+                  <Button variant="secondary" size="md" icon="open_in_new" iconPosition="right">
+                    Truy cập CSDL
+                  </Button>
                 </div>
               </div>
             ))}

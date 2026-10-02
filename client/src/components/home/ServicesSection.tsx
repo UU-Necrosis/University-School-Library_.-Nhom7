@@ -1,9 +1,10 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { ServiceCardItem } from "@/types/library";
 
-const mockServices: ServiceCardItem[] = [
+const mockServices: (ServiceCardItem & { href: string })[] = [
   {
     id: "1",
     title: "Mượn / Gia hạn trực tuyến",
@@ -15,6 +16,7 @@ const mockServices: ServiceCardItem[] = [
     detailStatus: "Còn 2 ngày",
     detailStatusColor: "text-[#DC2626]",
     actionText: "Gia hạn tài liệu ngay",
+    href: "/the-thu-vien",
   },
   {
     id: "2",
@@ -27,6 +29,7 @@ const mockServices: ServiceCardItem[] = [
     detailStatus: "Trống từ 14:00",
     detailStatusColor: "text-[#16A34A]",
     actionText: "Xem lịch & giữ chỗ",
+    href: "/dat-phong",
   },
   {
     id: "3",
@@ -39,6 +42,7 @@ const mockServices: ServiceCardItem[] = [
     detailStatus: "Miễn phí",
     detailStatusColor: "text-secondary",
     actionText: "Đặt lịch tư vấn thủ thư",
+    href: "/dich-vu",
   },
   {
     id: "4",
@@ -51,6 +55,7 @@ const mockServices: ServiceCardItem[] = [
     detailStatus: "Toàn quốc",
     detailStatusColor: "text-[#16A34A]",
     actionText: "Yêu cầu mượn liên trường",
+    href: "/dich-vu",
   },
 ];
 
@@ -67,10 +72,13 @@ export const ServicesSection: React.FC = () => {
               Dịch Vụ Nổi Bật & Thao Tác Trực Tuyến
             </h2>
           </div>
-          <a href="#services" className="inline-flex items-center gap-space-xs text-secondary hover:underline font-title-sm text-title-sm mt-space-sm md:mt-0">
+          <Link
+            href="/dich-vu"
+            className="inline-flex items-center gap-space-xs text-secondary hover:underline font-title-sm text-title-sm mt-space-sm md:mt-0"
+          >
             <span>Xem biểu phí & toàn bộ dịch vụ</span>
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </a>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-lg">
@@ -105,12 +113,15 @@ export const ServicesSection: React.FC = () => {
                 </div>
               </div>
 
-              <a href="#action" className="inline-flex items-center justify-between text-secondary hover:text-primary font-title-sm text-title-sm pt-space-xs group">
+              <Link
+                href={srv.href}
+                className="inline-flex items-center justify-between text-secondary hover:text-primary font-title-sm text-title-sm pt-space-xs group"
+              >
                 <span>{srv.actionText}</span>
                 <span className="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">
                   chevron_right
                 </span>
-              </a>
+              </Link>
             </div>
           ))}
         </div>

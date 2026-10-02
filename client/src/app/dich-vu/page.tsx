@@ -3,16 +3,8 @@
 import React, { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
-
-interface ResearchService {
-  id: string;
-  title: string;
-  target: string;
-  description: string;
-  features: string[];
-  icon: string;
-}
+import { Breadcrumb, Button } from "@/components/ui";
+import { ResearchService } from "@/types/library";
 
 const mockServices: ResearchService[] = [
   {
@@ -75,14 +67,13 @@ export default function ResearchServicesPage() {
         {/* Banner Section */}
         <section className="bg-tertiary text-on-tertiary py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
-            <nav className="flex items-center gap-space-xs font-label-md text-label-md text-tertiary-fixed">
-              <Link href="/" className="hover:underline flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-[16px]">home</span>
-                <span>Trang chủ</span>
-              </Link>
-              <span className="opacity-60">/</span>
-              <span className="text-white font-semibold">Dịch vụ Nghiên cứu & Hỗ trợ Học thuật</span>
-            </nav>
+            <Breadcrumb
+              variant="tertiary"
+              items={[
+                { label: "Trang chủ", href: "/", icon: "home" },
+                { label: "Dịch vụ Nghiên cứu & Hỗ trợ Học thuật" },
+              ]}
+            />
 
             <div className="flex flex-col gap-space-xs">
               <h1 className="font-headline-lg text-headline-lg font-semibold tracking-tight">
@@ -101,13 +92,14 @@ export default function ResearchServicesPage() {
             <h2 className="font-headline-md text-headline-md text-primary font-bold">
               Các Dịch vụ Hỗ trợ Trọng tâm
             </h2>
-            <button
+            <Button
+              variant="secondary"
+              size="md"
+              icon="edit_calendar"
               onClick={() => setActiveForm(true)}
-              className="px-space-md py-2 rounded-lg bg-secondary text-on-secondary font-title-sm text-title-sm hover:bg-secondary-container transition-colors flex items-center gap-1"
             >
-              <span className="material-symbols-outlined text-[18px]">edit_calendar</span>
-              <span>Gửi yêu cầu hỗ trợ</span>
-            </button>
+              Gửi yêu cầu hỗ trợ
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
@@ -140,7 +132,7 @@ export default function ResearchServicesPage() {
                     <ul className="space-y-1">
                       {srv.features.map((feat) => (
                         <li key={feat} className="flex items-center gap-2 text-xs text-on-surface-variant">
-                          <span className="material-symbols-outlined text-[14px] text-green-600">check_circle</span>
+                          <span className="material-symbols-outlined text-[14px] text-[#16A34A]">check_circle</span>
                           <span>{feat}</span>
                         </li>
                       ))}
@@ -150,12 +142,14 @@ export default function ResearchServicesPage() {
 
                 <div className="pt-space-md border-t border-outline-variant/30 flex items-center justify-between">
                   <span className="text-xs font-mono text-on-surface-variant">Thời gian xử lý: 24h - 48h</span>
-                  <button
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-secondary text-secondary hover:bg-secondary/10"
                     onClick={() => setActiveForm(true)}
-                    className="px-space-md py-1.5 rounded-md border border-secondary text-secondary font-title-sm text-title-sm hover:bg-secondary/10 transition-colors"
                   >
                     Đăng ký dịch vụ này
-                  </button>
+                  </Button>
                 </div>
               </div>
             ))}
@@ -165,10 +159,11 @@ export default function ResearchServicesPage() {
         {/* Modal Consultation Form */}
         {activeForm && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-space-md">
-            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-space-lg space-y-space-md relative border border-slate-200">
+            <div className="bg-surface-container-lowest rounded-xl shadow-2xl max-w-lg w-full p-space-lg space-y-space-md relative border border-outline-variant/40">
               <button
                 onClick={() => setActiveForm(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface"
+                aria-label="Đóng"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -176,65 +171,63 @@ export default function ResearchServicesPage() {
               <h3 className="font-headline-sm text-headline-sm text-primary font-bold">
                 Phiếu Đăng ký Dịch vụ Hỗ trợ Nghiên cứu
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-on-surface-variant">
                 Thủ thư chuyên trách sẽ liên hệ lại qua Email sinh viên / cán bộ trong vòng 24 giờ làm việc.
               </p>
 
               {submitted ? (
-                <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg text-center font-medium">
+                <div className="p-4 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-lg text-center font-medium">
                   ✅ Yêu cầu đã được ghi nhận thành công! Vui lòng kiểm tra email phản hồi.
                 </div>
               ) : (
                 <form onSubmit={handleSubmitConsultation} className="space-y-space-md">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Email ĐHQG (Email nhận kết quả)</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1">Email ĐHQG (Email nhận kết quả)</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="example@vnu.edu.vn"
-                      className="w-full h-11 px-3 border border-slate-300 rounded-md text-sm font-medium"
+                      className="w-full h-11 px-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Tên đề tài / Chủ đề nghiên cứu</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1">Tên đề tài / Chủ đề nghiên cứu</label>
                     <input
                       type="text"
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
                       placeholder="Ví dụ: Kiểm tra Turnitin bài báo Scopus về Machine Learning..."
-                      className="w-full h-11 px-3 border border-slate-300 rounded-md text-sm font-medium"
+                      className="w-full h-11 px-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ghi chú cụ thể</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1">Ghi chú cụ thể</label>
                     <textarea
                       rows={3}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Mô tả chi tiết tài liệu cần mượn hoặc yêu cầu hỗ trợ đặc biệt..."
-                      className="w-full p-3 border border-slate-300 rounded-md text-sm font-medium"
+                      className="w-full p-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
                     ></textarea>
                   </div>
 
                   <div className="pt-2 flex justify-end gap-space-xs">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="md"
                       onClick={() => setActiveForm(false)}
-                      className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
                       Hủy
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-secondary text-white rounded-md text-sm font-semibold hover:bg-blue-700"
-                    >
+                    </Button>
+                    <Button type="submit" variant="secondary" size="md">
                       Gửi yêu cầu
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}

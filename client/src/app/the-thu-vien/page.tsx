@@ -1,18 +1,11 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
-
-interface LoanItem {
-  id: string;
-  bookTitle: string;
-  borrowDate: string;
-  dueDate: string;
-  status: "Đang mượn" | "Sắp đến hạn" | "Quá hạn";
-  renewCount: number;
-}
+import { Breadcrumb, Badge, Button } from "@/components/ui";
+import { LoanItem } from "@/types/library";
 
 const mockLoans: LoanItem[] = [
   {
@@ -82,18 +75,16 @@ export default function DigitalPatronPage() {
     <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
-      <main className="w-full pt-32 flex-1">
+      <main className="w-full pt-32 flex-1 pb-space-xl">
         {/* Banner */}
         <section className="bg-surface-container-low border-b border-outline-variant/30 py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
-            <nav className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
-              <Link href="/" className="hover:text-secondary flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-[16px]">home</span>
-                <span>Trang chủ</span>
-              </Link>
-              <span className="text-outline-variant">/</span>
-              <span className="text-primary font-semibold">Thẻ Thư viện Số & Quản lý Bạn đọc</span>
-            </nav>
+            <Breadcrumb
+              items={[
+                { label: "Trang chủ", href: "/", icon: "home" },
+                { label: "Thẻ Thư viện Số & Quản lý Bạn đọc" },
+              ]}
+            />
 
             <div className="flex flex-col gap-space-xs">
               <h1 className="font-headline-lg text-headline-lg text-primary font-semibold tracking-tight">
@@ -103,6 +94,37 @@ export default function DigitalPatronPage() {
                 Quản lý thẻ thư viện Barcode/QR thông minh, gia hạn sách trực tuyến và theo dõi lịch sử mượn trả tài liệu cá nhân.
               </p>
             </div>
+
+            {/* Sub-Navigation Tabs */}
+            <div className="flex items-center gap-space-xs overflow-x-auto pt-space-xs border-b border-outline-variant/30">
+              <Link
+                href="/the-thu-vien"
+                className="px-space-md py-2 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/60 rounded-t-lg"
+              >
+                Sách đang mượn & Thẻ ID
+              </Link>
+              <Link
+                href="/the-thu-vien/lich-su"
+                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+              >
+                Lịch sử mượn trả
+              </Link>
+              <Link
+                href="/the-thu-vien/dat-truoc"
+                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+              >
+                Sách đặt trước (2)
+              </Link>
+              <Link
+                href="/the-thu-vien/phi-phat"
+                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
+              >
+                <span>Phí phạt & Khoản nợ</span>
+                <span className="px-1.5 py-0.5 text-xs font-semibold bg-[#FEE2E2] text-[#DC2626] rounded-full">
+                  2
+                </span>
+              </Link>
+            </div>
           </div>
         </section>
 
@@ -110,7 +132,7 @@ export default function DigitalPatronPage() {
         <section className="max-w-7xl mx-auto py-space-xl px-space-md lg:px-margin grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
           {/* Digital Card Preview */}
           <div className="lg:col-span-1 space-y-space-md">
-            <div className="bg-gradient-to-br from-[#022448] via-[#1e3a5f] to-[#0051d5] text-white rounded-2xl p-space-lg shadow-xl relative overflow-hidden border border-white/20">
+            <div className="bg-gradient-to-br from-primary via-primary-container to-secondary text-white rounded-2xl p-space-lg shadow-xl relative overflow-hidden border border-white/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-bold text-sm">
@@ -118,9 +140,9 @@ export default function DigitalPatronPage() {
                   </div>
                   <span className="font-bold tracking-wider text-sm">UniLibrary Digital ID</span>
                 </div>
-                <span className="px-2 py-0.5 rounded-full bg-green-400/20 text-green-300 text-xs font-mono font-bold border border-green-400/30">
+                <Badge variant="success" size="sm" dot>
                   ACTIVE
-                </span>
+                </Badge>
               </div>
 
               <div className="mt-6 space-y-1">
@@ -165,7 +187,7 @@ export default function DigitalPatronPage() {
           {/* Active Loans Table */}
           <div className="lg:col-span-2 space-y-space-md">
             {renewMsg && (
-              <div className="p-3 bg-green-50 border border-green-200 text-green-800 rounded-lg text-sm font-medium">
+              <div className="p-3 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-lg text-sm font-medium">
                 ✅ {renewMsg}
               </div>
             )}
@@ -196,30 +218,28 @@ export default function DigitalPatronPage() {
                         <td className="p-space-md font-semibold text-primary">{item.bookTitle}</td>
                         <td className="p-space-md font-mono text-xs font-medium">{item.dueDate}</td>
                         <td className="p-space-md">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          <Badge
+                            variant={
                               item.status === "Đang mượn"
-                                ? "bg-green-100 text-green-800 border border-green-300"
+                                ? "success"
                                 : item.status === "Sắp đến hạn"
-                                ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                : "bg-red-100 text-red-800 border border-red-300"
-                            }`}
+                                ? "warning"
+                                : "danger"
+                            }
+                            size="sm"
                           >
                             {item.status}
-                          </span>
+                          </Badge>
                         </td>
                         <td className="p-space-md text-right">
-                          <button
+                          <Button
+                            variant={item.renewCount >= 2 ? "ghost" : "secondary"}
+                            size="sm"
                             onClick={() => handleRenew(item.id)}
                             disabled={item.renewCount >= 2}
-                            className={`px-3 py-1 rounded text-xs font-semibold transition-colors ${
-                              item.renewCount >= 2
-                                ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                                : "bg-secondary text-on-secondary hover:bg-secondary-container"
-                            }`}
                           >
                             {item.renewCount >= 2 ? "Hết lượt gia hạn" : "Gia hạn +7 ngày"}
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     ))}

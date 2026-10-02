@@ -1,20 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import Link from "next/link";
-
-interface RoomItem {
-  id: string;
-  name: string;
-  floor: string;
-  capacity: string;
-  equipment: string[];
-  status: "Trống" | "Đang sử dụng" | "Đã đặt trước";
-  nextAvailable: string;
-  imageIcon: string;
-}
+import { Breadcrumb, Badge, Button } from "@/components/ui";
+import { RoomItem } from "@/types/library";
 
 const mockRooms: RoomItem[] = [
   {
@@ -82,14 +73,12 @@ export default function RoomBookingPage() {
         {/* Banner Section */}
         <section className="bg-surface-container-low border-b border-outline-variant/30 py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
-            <nav className="flex items-center gap-space-xs font-label-md text-label-md text-on-surface-variant">
-              <Link href="/" className="hover:text-secondary flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-[16px]">home</span>
-                <span>Trang chủ</span>
-              </Link>
-              <span className="text-outline-variant">/</span>
-              <span className="text-primary font-semibold">Đặt phòng Học nhóm & Tiện ích Thư viện</span>
-            </nav>
+            <Breadcrumb
+              items={[
+                { label: "Trang chủ", href: "/", icon: "home" },
+                { label: "Đặt phòng & Tiện ích" },
+              ]}
+            />
 
             <div className="flex flex-col gap-space-xs">
               <h1 className="font-headline-lg text-headline-lg text-primary font-semibold tracking-tight">
@@ -98,6 +87,25 @@ export default function RoomBookingPage() {
               <p className="font-body-md text-body-md text-on-surface-variant max-w-3xl">
                 Đặt trước không gian thảo luận nhóm, phòng seminar hiện đại và cabin nghiên cứu cá nhân yên tĩnh dành cho sinh viên, học viên cao học & giảng viên ĐHQG.
               </p>
+            </div>
+
+            {/* Sub-Navigation Tabs */}
+            <div className="flex items-center gap-space-xs overflow-x-auto pt-space-xs border-b border-outline-variant/30">
+              <Link
+                href="/dat-phong"
+                className="px-space-md py-2 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/60 rounded-t-lg"
+              >
+                Không gian & Tiện ích khả dụng
+              </Link>
+              <Link
+                href="/dat-phong/lich-su"
+                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
+              >
+                <span>Lịch sử đặt phòng</span>
+                <span className="px-1.5 py-0.5 text-xs font-semibold bg-secondary/10 text-secondary rounded-full">
+                  4
+                </span>
+              </Link>
             </div>
           </div>
         </section>
@@ -109,12 +117,12 @@ export default function RoomBookingPage() {
               Danh sách Phòng & Space Khả dụng
             </h2>
             <div className="flex items-center gap-space-sm">
-              <span className="flex items-center gap-1 text-xs font-semibold text-green-700 bg-green-100 px-2.5 py-1 rounded-full border border-green-300">
-                <span className="w-2 h-2 rounded-full bg-green-600"></span> Trống ({mockRooms.filter(r => r.status === "Trống").length})
-              </span>
-              <span className="flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full border border-amber-300">
-                <span className="w-2 h-2 rounded-full bg-amber-600"></span> Đang có người ({mockRooms.filter(r => r.status !== "Trống").length})
-              </span>
+              <Badge variant="success" dot size="md">
+                Trống ({mockRooms.filter((r) => r.status === "Trống").length})
+              </Badge>
+              <Badge variant="warning" dot size="md">
+                Đang có người ({mockRooms.filter((r) => r.status !== "Trống").length})
+              </Badge>
             </div>
           </div>
 
@@ -130,17 +138,18 @@ export default function RoomBookingPage() {
                       <span className="material-symbols-outlined text-[16px]">location_on</span>
                       {room.floor}
                     </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                    <Badge
+                      variant={
                         room.status === "Trống"
-                          ? "bg-green-100 text-green-800 border-green-300"
+                          ? "success"
                           : room.status === "Đang sử dụng"
-                          ? "bg-amber-100 text-amber-800 border-amber-300"
-                          : "bg-slate-100 text-slate-800 border-slate-300"
-                      }`}
+                          ? "warning"
+                          : "neutral"
+                      }
+                      size="sm"
                     >
                       {room.status}
-                    </span>
+                    </Badge>
                   </div>
 
                   <div className="flex items-start gap-space-md">
@@ -173,13 +182,14 @@ export default function RoomBookingPage() {
                   <span className="text-xs text-on-surface-variant font-mono">
                     {room.nextAvailable}
                   </span>
-                  <button
+                  <Button
+                    variant="secondary"
+                    size="md"
+                    icon="event_available"
                     onClick={() => setSelectedRoom(room)}
-                    className="px-space-lg py-2 rounded-lg bg-secondary text-on-secondary font-title-sm text-title-sm hover:bg-secondary-container transition-colors flex items-center gap-1"
                   >
-                    <span className="material-symbols-outlined text-[18px]">event_available</span>
-                    <span>Đặt phòng này</span>
-                  </button>
+                    Đặt phòng này
+                  </Button>
                 </div>
               </div>
             ))}
@@ -189,10 +199,11 @@ export default function RoomBookingPage() {
         {/* Modal Booking Form */}
         {selectedRoom && (
           <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-space-md">
-            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-space-lg space-y-space-md relative border border-slate-200">
+            <div className="bg-surface-container-lowest rounded-xl shadow-2xl max-w-lg w-full p-space-lg space-y-space-md relative border border-outline-variant/40">
               <button
                 onClick={() => setSelectedRoom(null)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface"
+                aria-label="Đóng"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -200,33 +211,33 @@ export default function RoomBookingPage() {
               <h3 className="font-headline-sm text-headline-sm text-primary font-bold">
                 Xác nhận đặt: {selectedRoom.name}
               </h3>
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-on-surface-variant">
                 Vị trí: {selectedRoom.floor} • Sức chứa: {selectedRoom.capacity}
               </p>
 
               {successMsg ? (
-                <div className="p-4 bg-green-50 border border-green-200 text-green-800 rounded-lg text-center font-medium">
+                <div className="p-4 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-lg text-center font-medium">
                   🎉 Đặt phòng thành công! Mã xác nhận đã gửi về email sinh viên của bạn.
                 </div>
               ) : (
                 <form onSubmit={handleBookSubmit} className="space-y-space-md">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Ngày đặt phòng</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1">Ngày đặt phòng</label>
                     <input
                       type="date"
                       value={bookingDate}
                       onChange={(e) => setBookingDate(e.target.value)}
-                      className="w-full h-11 px-3 border border-slate-300 rounded-md text-sm font-medium"
+                      className="w-full h-11 px-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">Khung giờ sử dụng</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1">Khung giờ sử dụng</label>
                     <select
                       value={bookingTime}
                       onChange={(e) => setBookingTime(e.target.value)}
-                      className="w-full h-11 px-3 border border-slate-300 rounded-md text-sm font-medium"
+                      className="w-full h-11 px-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
                     >
                       <option value="08:00 - 10:00">08:00 - 10:00 (Ca Sáng 1)</option>
                       <option value="10:00 - 12:00">10:00 - 12:00 (Ca Sáng 2)</option>
@@ -237,19 +248,17 @@ export default function RoomBookingPage() {
                   </div>
 
                   <div className="pt-2 flex justify-end gap-space-xs">
-                    <button
+                    <Button
                       type="button"
+                      variant="outline"
+                      size="md"
                       onClick={() => setSelectedRoom(null)}
-                      className="px-4 py-2 border border-slate-300 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
                       Hủy bỏ
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-secondary text-white rounded-md text-sm font-semibold hover:bg-blue-700"
-                    >
+                    </Button>
+                    <Button type="submit" variant="secondary" size="md">
                       Xác nhận đăng ký
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}
