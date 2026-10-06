@@ -1,146 +1,138 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Badge } from "@/components/ui";
 import { Account } from "@/types/library";
 
-export default function RegisterPage() {
+export default function LoginPage() {
   const router = useRouter();
 
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(true);
-
+  const [remember, setRemember] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [successAccount, setSuccessAccount] = useState<Account | null>(null);
 
-  // Live password criteria validation
-  const passwordCriteria = useMemo(() => {
-    return {
-      minLength: password.length >= 8,
-      hasUpperLower: /[a-z]/.test(password) && /[A-Z]/.test(password),
-      hasNumber: /\d/.test(password),
-      hasSpecial: /[^A-Za-z0-9\s]/.test(password),
-    };
-  }, [password]);
+  // Modals & Feedback State
+  const [isForgotModalOpen, setIsForgotModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSubmitted, setForgotSubmitted] = useState(false);
 
-  const strengthScore = useMemo(() => {
-    let score = 0;
-    if (passwordCriteria.minLength) score += 1;
-    if (passwordCriteria.hasUpperLower) score += 1;
-    if (passwordCriteria.hasNumber) score += 1;
-    if (passwordCriteria.hasSpecial) score += 1;
-    return score;
-  }, [passwordCriteria]);
+  const [isSsoModalOpen, setIsSsoModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  function handleRegister(e: React.FormEvent<HTMLFormElement>) {
+  function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
-    // 1. Kiểm tra họ và tên
-    if (name.trim().length < 2) {
-      setError("Vui lòng nhập họ và tên hợp lệ (tối thiểu 2 ký tự).");
-      return;
-    }
+    const normalizedInput = email.trim().toLowerCase();
 
-    // 2. Kiểm tra mã sinh viên / độc giả
-    const normalizedCode = code.trim().toUpperCase();
-    if (!normalizedCode) {
-      setError("Vui lòng nhập mã sinh viên, học viên hoặc mã độc giả.");
-      return;
-    }
-
-    // 3. Kiểm tra email hợp lệ
-    const normalizedEmail = email.trim().toLowerCase();
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-
-    if (!normalizedEmail) {
-      setError("Vui lòng nhập địa chỉ email.");
-      return;
-    }
-
-    if (!normalizedEmail.includes("@")) {
-      setError("Email chưa đầy đủ. Vui lòng nhập thêm tên miền email (ví dụ: @university.edu.vn hoặc @gmail.com).");
-      return;
-    }
-
-    if (!emailRegex.test(normalizedEmail)) {
-      setError("Địa chỉ email không đúng định dạng. Vui lòng kiểm tra lại.");
-      return;
-    }
-
-    // 4. Kiểm tra tiêu chí mật khẩu mạnh
-    if (strengthScore < 4) {
-      setError("Mật khẩu chưa đạt yêu cầu bảo mật. Vui lòng đảm bảo đầy đủ 4 tiêu chí bên dưới.");
-      return;
-    }
-
-    // 5. Kiểm tra xác nhận mật khẩu
-    if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp với mật khẩu đã nhập.");
-      return;
-    }
-
-    // 6. Kiểm tra đồng ý quy chế
-    if (!agreeTerms) {
-      setError("Vui lòng đồng ý với Quy chế Thư viện & Bảo mật thông tin bạn đọc.");
+    if (!normalizedInput || !password) {
+      setError("Vui lòng nhập đầy đủ Email/Mã sinh viên và Mật khẩu.");
       return;
     }
 
     setLoading(true);
 
     try {
-      // 7. Lấy danh sách tài khoản từ localStorage
-      const accounts: Account[] = JSON.parse(
+      // 1. Lấy danh sách tài khoản đã lưu từ localStorage
+      const accounts: any[] = JSON.parse(
         localStorage.getItem("unilibrary_accounts") || "[]"
       );
 
-      // 8. Kiểm tra trùng email hoặc mã sinh viên
-      const exists = accounts.some(
-        (account) =>
-          account.email.toLowerCase() === normalizedEmail ||
-          account.code.toUpperCase() === normalizedCode
+      // Nếu danh sách rỗng (lần đầu truy cập), hỗ trợ tài khoản demo mặc định của Thư viện
+      // Bổ sung trường `unit` để đồng bộ với DigitalPatronPage
+      const demoAccounts = [
+        {
+          name: "Nguyễn Văn An",
+          code: "UL-202488",
+          email: "an.nguyen@university.edu.vn",
+          password: "Password123!",
+          unit: "ĐHQG TP.HCM • Khoa CNTT",
+        },
+      ];
+
+      const allAccounts = accounts.length > 0 ? accounts : demoAccounts;
+
+      // 2. Tìm tài khoản khớp email hoặc mã sinh viên
+      const account = allAccounts.find(
+        (item) =>
+          (item.email.trim().toLowerCase() === normalizedInput ||
+            item.code.trim().toLowerCase() === normalizedInput) &&
+          item.password === password
       );
 
-      if (exists) {
-        setError("Email hoặc mã sinh viên/độc giả này đã được đăng ký trên hệ thống.");
+      if (!account) {
+        // Cho phép đăng nhập demo nếu nhập đúng định dạng email sinh viên cho trải nghiệm mượt mà
+        if (normalizedInput.includes("@") && password.length >= 6) {
+          const defaultUser = {
+            name: "Độc giả UniLibrary",
+            code: "UL-202699",
+            email: normalizedInput,
+            unit: "ĐHQG TP.HCM • Đơn vị Thành viên", // Đồng bộ trường unit
+          };
+          const storage = remember ? localStorage : sessionStorage;
+          localStorage.removeItem("unilibrary_user");
+          sessionStorage.removeItem("unilibrary_user");
+          storage.setItem("unilibrary_user", JSON.stringify(defaultUser));
+
+          setTimeout(() => {
+            router.push("/");
+          }, 600);
+          return;
+        }
+
+        setError("Email/Mã độc giả hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.");
         setLoading(false);
         return;
       }
 
-      // 9. Tạo tài khoản mới
-      const newAccount: Account = {
-        name: name.trim(),
-        code: normalizedCode,
-        email: normalizedEmail,
-        password,
+      // 3. Lưu thông tin phiên đăng nhập (Bao gồm unit)
+      const user = {
+        name: account.name,
+        code: account.code,
+        email: account.email,
+        unit: account.unit || "ĐHQG TP.HCM • Đơn vị Thành viên",
       };
 
-      accounts.push(newAccount);
+      localStorage.removeItem("unilibrary_user");
+      sessionStorage.removeItem("unilibrary_user");
 
-      // 10. Lưu vào localStorage
-      localStorage.setItem("unilibrary_accounts", JSON.stringify(accounts));
+      const storage = remember ? localStorage : sessionStorage;
+      storage.setItem("unilibrary_user", JSON.stringify(user));
 
-      // 11. Bật modal thành công
+      // 4. Chuyển hướng về trang chủ
       setTimeout(() => {
-        setLoading(false);
-        setSuccessAccount(newAccount);
+        router.push("/");
       }, 500);
     } catch (err) {
-      console.error("Lỗi đăng ký:", err);
-      setError("Không thể khởi tạo tài khoản trong phiên này. Vui lòng thử lại.");
+      console.error("Lỗi đăng nhập:", err);
+      setError("Không thể xử lý phiên đăng nhập. Vui lòng thử lại.");
       setLoading(false);
     }
   }
+
+  const handleForgotSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setForgotSubmitted(true);
+    setTimeout(() => {
+      setToastMessage(
+        `Đã gửi hướng dẫn khôi phục mật khẩu tới địa chỉ ${forgotEmail}. Vui lòng kiểm tra hộp thư.`
+      );
+      setIsForgotModalOpen(false);
+      setForgotSubmitted(false);
+      setForgotEmail("");
+      setTimeout(() => setToastMessage(null), 5000);
+    }, 800);
+  };
+
+  const handleSsoDemoLogin = () => {
+    setIsSsoModalOpen(true);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
@@ -162,19 +154,40 @@ export default function RegisterPage() {
           </Link>
 
           <Link
-            href="/login"
-            className="text-xs sm:text-sm font-medium text-secondary hover:text-primary flex items-center gap-1.5 transition-colors py-1.5 px-3 rounded-lg hover:bg-surface-container-low"
+            href="/"
+            className="text-xs sm:text-sm font-medium text-on-surface-variant hover:text-secondary flex items-center gap-1.5 transition-colors py-1.5 px-3 rounded-lg hover:bg-surface-container-low"
           >
-            <span>Đã có tài khoản?</span>
-            <strong className="font-bold underline">Đăng nhập</strong>
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            <span>Về trang chủ</span>
           </Link>
         </div>
       </header>
 
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full mt-4">
+          <div className="p-4 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <span className="material-symbols-outlined text-[#16A34A] text-[20px]">
+                check_circle
+              </span>
+              <span>{toastMessage}</span>
+            </div>
+            <button
+              onClick={() => setToastMessage(null)}
+              className="text-[#166534] hover:opacity-70 p-1"
+              aria-label="Đóng thông báo"
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-10">
-        <div className="max-w-5xl w-full bg-surface-container-lowest rounded-3xl border border-outline-variant/40 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[680px]">
-          {/* Left Column: Academic Branding & Member Perks (5 cols) */}
+        <div className="max-w-5xl w-full bg-surface-container-lowest rounded-3xl border border-outline-variant/40 shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 min-h-[620px]">
+          {/* Left Column: Academic Branding & Value Proposition (5 cols) */}
           <div className="lg:col-span-5 bg-gradient-to-br from-primary via-[#043366] to-secondary text-white p-8 sm:p-10 flex flex-col justify-between relative overflow-hidden">
             {/* Background Pattern */}
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
@@ -182,15 +195,15 @@ export default function RegisterPage() {
             <div className="relative z-10 space-y-6">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-xs font-semibold tracking-wide">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Đăng Ký Độc Giả Số 2026</span>
+                <span>Cổng Xác Thực Bạn Đọc 2026</span>
               </div>
 
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-tight">
-                  Gia Nhập Cộng Đồng Học Thuật & Nghiên Cứu UniLibrary
+                  Kho Tri Thức Số & Dịch Vụ Nghiên Cứu Học Thuật
                 </h2>
                 <p className="mt-3 text-sm text-blue-100/90 leading-relaxed">
-                  Kích hoạt hồ sơ bạn đọc để khai thác hơn 50.000+ tài liệu điện tử, cơ sở dữ liệu quốc tế và không gian nghiên cứu chuyên sâu.
+                  Truy cập tức thì hơn 50.000+ sách chuyên khảo, bài báo Scopus/WoS, cơ sở dữ liệu quốc tế và dịch vụ mượn trả thông minh.
                 </p>
               </div>
 
@@ -199,13 +212,27 @@ export default function RegisterPage() {
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="material-symbols-outlined text-[18px] text-blue-200">
+                      menu_book
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white">OPAC & Tài Liệu Điện Tử</h3>
+                    <p className="text-[11px] text-blue-200 leading-tight mt-0.5">
+                      Đọc trực tuyến luận án, sách số và toàn văn cơ sở dữ liệu quốc tế.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[18px] text-blue-200">
                       badge
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-white">Thẻ Thư Viện Số Tự Động</h3>
+                    <h3 className="text-xs font-bold text-white">Thẻ Thư Viện Định Danh Số</h3>
                     <p className="text-[11px] text-blue-200 leading-tight mt-0.5">
-                      Cấp mã định danh và mã vạch Barcode mượn trả tức thì ngay sau khi đăng ký.
+                      Gia hạn sách từ xa, theo dõi hàng đợi và lịch sử mượn trả minh bạch.
                     </p>
                   </div>
                 </div>
@@ -213,27 +240,13 @@ export default function RegisterPage() {
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
                     <span className="material-symbols-outlined text-[18px] text-blue-200">
-                      dataset
+                      meeting_room
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-white">Toàn Văn Luận Án & Scopus/WoS</h3>
+                    <h3 className="text-xs font-bold text-white">Đặt Không Gian Học Tập</h3>
                     <p className="text-[11px] text-blue-200 leading-tight mt-0.5">
-                      Đọc và tải tài liệu nghiên cứu chuyên ngành trực tuyến không giới hạn.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
-                    <span className="material-symbols-outlined text-[18px] text-blue-200">
-                      verified_user
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xs font-bold text-white">Chuẩn Hóa Dữ Liệu Học Thuật</h3>
-                    <p className="text-[11px] text-blue-200 leading-tight mt-0.5">
-                      Đảm bảo quyền lợi mượn sách in và bảo mật thông tin bạn đọc chuẩn ĐHQG.
+                      Giữ chỗ phòng thảo luận nhóm, phòng nghiên cứu chuyên sâu 24/7.
                     </p>
                   </div>
                 </div>
@@ -247,271 +260,124 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Right Column: Register Form (7 cols) */}
+          {/* Right Column: Login Form (7 cols) */}
           <div className="lg:col-span-7 p-6 sm:p-10 lg:p-12 flex flex-col justify-between bg-surface-container-lowest">
             <div>
-              {/* Form Header */}
+              {/* Form Title */}
               <div className="mb-6">
                 <Badge variant="primary" size="sm" className="mb-2">
-                  Tạo Tài Khoản Mới
+                  Xác thực Độc giả
                 </Badge>
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-primary">
-                  Đăng Ký Thẻ Thư Viện
+                  Đăng nhập Hệ thống
                 </h1>
                 <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
-                  Nhập đầy đủ thông tin bên dưới để khởi tạo tài khoản bạn đọc UniLibrary.
+                  Sử dụng tài khoản thư viện số hoặc mã số sinh viên/học viên ĐHQG.
                 </p>
               </div>
 
-              {/* Main Register Form */}
-              <form onSubmit={handleRegister} className="space-y-4">
-                {/* Họ và tên */}
-                <div>
-                  <label
-                    htmlFor="reg-name"
-                    className="block text-xs font-semibold text-on-surface mb-1.5"
-                  >
-                    Họ và tên đầy đủ <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="reg-name"
-                      type="text"
-                      autoComplete="name"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="VD: Nguyễn Văn An"
-                      className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
-                    />
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
-                      person
-                    </span>
+              {/* VNU SSO Quick Action */}
+              <div className="mb-6">
+                <button
+                  type="button"
+                  onClick={handleSsoDemoLogin}
+                  className="w-full h-11 px-4 rounded-xl border border-outline-variant/60 hover:border-secondary bg-surface-container-low hover:bg-secondary/5 text-primary text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all shadow-xs group"
+                >
+                  <div className="w-6 h-6 rounded bg-primary text-white text-[10px] font-bold flex items-center justify-center group-hover:bg-secondary transition-colors">
+                    VNU
                   </div>
-                </div>
+                  <span>Đăng nhập với VNU SSO (EduID ĐHQG)</span>
+                </button>
 
-                {/* Mã sinh viên / độc giả */}
+                <div className="relative my-5">
+                  <div className="border-t border-outline-variant/30" />
+                  <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-surface-container-lowest px-3 text-[11px] font-medium text-on-surface-variant uppercase tracking-wider">
+                    Hoặc dùng tài khoản thư viện
+                  </span>
+                </div>
+              </div>
+
+              {/* Main Login Form */}
+              <form onSubmit={handleLogin} className="space-y-4">
+                {/* Email / Patron Code Field */}
                 <div>
                   <label
-                    htmlFor="reg-code"
+                    htmlFor="login-email"
                     className="block text-xs font-semibold text-on-surface mb-1.5"
                   >
-                    Mã sinh viên / học viên / mã độc giả <span className="text-red-500">*</span>
+                    Email hoặc Mã số độc giả / MSSV <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
-                      id="reg-code"
+                      id="login-email"
                       type="text"
-                      required
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      placeholder="VD: UL-202488 hoặc MSSV 2024001"
-                      className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
-                    />
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
-                      badge
-                    </span>
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label
-                    htmlFor="reg-email"
-                    className="block text-xs font-semibold text-on-surface mb-1.5"
-                  >
-                    Địa chỉ Email <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="reg-email"
-                      type="email"
-                      autoComplete="email"
+                      autoComplete="username"
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@university.edu.vn hoặc name@gmail.com"
+                      placeholder="name@university.edu.vn hoặc UL-202488"
                       className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
                     />
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
-                      mail
+                      account_circle
                     </span>
                   </div>
                 </div>
 
-                {/* Mật khẩu & Xác nhận mật khẩu (Grid 2 cột trên sm) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Mật khẩu */}
-                  <div>
+                {/* Password Field */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
                     <label
-                      htmlFor="reg-password"
-                      className="block text-xs font-semibold text-on-surface mb-1.5"
+                      htmlFor="login-password"
+                      className="block text-xs font-semibold text-on-surface"
                     >
-                      Mật khẩu <span className="text-red-500">*</span>
+                      Mật khẩu truy cập <span className="text-red-500">*</span>
                     </label>
-                    <div className="relative">
-                      <input
-                        id="reg-password"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        required
-                        minLength={8}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Tối thiểu 8 ký tự"
-                        className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-9 pr-9 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
-                      />
-                      <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[17px]">
-                        lock
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors p-1"
-                      >
-                        <span className="material-symbols-outlined text-[17px]">
-                          {showPassword ? "visibility_off" : "visibility"}
-                        </span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsForgotModalOpen(true)}
+                      className="text-xs font-medium text-secondary hover:underline transition-colors"
+                    >
+                      Quên mật khẩu?
+                    </button>
                   </div>
-
-                  {/* Xác nhận mật khẩu */}
-                  <div>
-                    <label
-                      htmlFor="reg-confirm-password"
-                      className="block text-xs font-semibold text-on-surface mb-1.5"
+                  <div className="relative">
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Nhập mật khẩu thư viện"
+                      className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 pr-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+                    />
+                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
+                      lock
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors p-1"
                     >
-                      Xác nhận mật khẩu <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        id="reg-confirm-password"
-                        type={showConfirmPassword ? "text" : "password"}
-                        autoComplete="new-password"
-                        required
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Nhập lại mật khẩu"
-                        className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-9 pr-9 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
-                      />
-                      <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[17px]">
-                        lock_reset
+                      <span className="material-symbols-outlined text-[18px]">
+                        {showPassword ? "visibility_off" : "visibility"}
                       </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        aria-label={showConfirmPassword ? "Ẩn mật khẩu xác nhận" : "Hiện mật khẩu xác nhận"}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-primary transition-colors p-1"
-                      >
-                        <span className="material-symbols-outlined text-[17px]">
-                          {showConfirmPassword ? "visibility_off" : "visibility"}
-                        </span>
-                      </button>
-                    </div>
+                    </button>
                   </div>
                 </div>
 
-                {/* Password Strength Checklist */}
-                {password.length > 0 && (
-                  <div className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/30 space-y-2 text-[11px] animate-fade-in">
-                    <div className="flex items-center justify-between">
-                      <span className="text-on-surface-variant font-medium">Độ mạnh mật khẩu:</span>
-                      <span
-                        className={`font-bold ${
-                          strengthScore === 4
-                            ? "text-[#16A34A]"
-                            : strengthScore >= 2
-                            ? "text-[#D97706]"
-                            : "text-[#DC2626]"
-                        }`}
-                      >
-                        {strengthScore === 4
-                          ? "Mạnh (Đạt chuẩn)"
-                          : strengthScore >= 2
-                          ? "Trung bình"
-                          : "Yếu"}
-                      </span>
-                    </div>
-
-                    {/* Strength Progress Bar */}
-                    <div className="w-full h-1.5 bg-surface-container-high rounded-full overflow-hidden flex gap-1">
-                      {[1, 2, 3, 4].map((step) => (
-                        <div
-                          key={step}
-                          className={`flex-1 h-full rounded-full transition-all ${
-                            step <= strengthScore
-                              ? strengthScore === 4
-                                ? "bg-[#16A34A]"
-                                : strengthScore >= 2
-                                ? "bg-[#D97706]"
-                                : "bg-[#DC2626]"
-                              : "bg-transparent"
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Criteria items */}
-                    <div className="grid grid-cols-2 gap-1 pt-1 text-on-surface-variant">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`material-symbols-outlined text-[15px] ${
-                            passwordCriteria.minLength ? "text-[#16A34A]" : "text-outline-variant"
-                          }`}
-                        >
-                          {passwordCriteria.minLength ? "check_circle" : "radio_button_unchecked"}
-                        </span>
-                        <span>Tối thiểu 8 ký tự</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`material-symbols-outlined text-[15px] ${
-                            passwordCriteria.hasUpperLower ? "text-[#16A34A]" : "text-outline-variant"
-                          }`}
-                        >
-                          {passwordCriteria.hasUpperLower ? "check_circle" : "radio_button_unchecked"}
-                        </span>
-                        <span>Chữ hoa & chữ thường</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`material-symbols-outlined text-[15px] ${
-                            passwordCriteria.hasNumber ? "text-[#16A34A]" : "text-outline-variant"
-                          }`}
-                        >
-                          {passwordCriteria.hasNumber ? "check_circle" : "radio_button_unchecked"}
-                        </span>
-                        <span>Ít nhất 1 chữ số (0-9)</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`material-symbols-outlined text-[15px] ${
-                            passwordCriteria.hasSpecial ? "text-[#16A34A]" : "text-outline-variant"
-                          }`}
-                        >
-                          {passwordCriteria.hasSpecial ? "check_circle" : "radio_button_unchecked"}
-                        </span>
-                        <span>Ký tự đặc biệt (!@#...)</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Terms Agreement */}
-                <div className="pt-1">
-                  <label className="flex items-start gap-2 text-xs text-on-surface-variant cursor-pointer select-none">
+                {/* Remember Me Option */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-xs text-on-surface-variant cursor-pointer select-none">
                     <input
                       type="checkbox"
-                      checked={agreeTerms}
-                      onChange={(e) => setAgreeTerms(e.target.checked)}
-                      className="w-4 h-4 rounded border-outline-variant text-secondary focus:ring-secondary/20 accent-secondary mt-0.5"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="w-4 h-4 rounded border-outline-variant text-secondary focus:ring-secondary/20 accent-secondary"
                     />
-                    <span>
-                      Tôi đồng ý với{" "}
-                      <span className="text-secondary font-medium">Quy chế Thư viện</span> & Cam kết bảo quản tài liệu học thuật theo quy định.
-                    </span>
+                    <span>Duy trì đăng nhập trên thiết bị này</span>
                   </label>
                 </div>
 
@@ -543,23 +409,23 @@ export default function RegisterPage() {
                         progress_activity
                       </span>
                     ) : (
-                      <span className="material-symbols-outlined text-[18px]">how_to_reg</span>
+                      <span className="material-symbols-outlined text-[18px]">login</span>
                     )}
-                    <span>{loading ? "Đang tạo tài khoản bạn đọc..." : "Đăng ký Thẻ Độc giả"}</span>
+                    <span>{loading ? "Đang xác thực tài khoản..." : "Đăng nhập UniLibrary"}</span>
                   </Button>
                 </div>
               </form>
             </div>
 
-            {/* Bottom Login Switcher */}
+            {/* Bottom Register Switcher */}
             <div className="pt-6 mt-6 border-t border-outline-variant/30 text-center">
               <p className="text-xs sm:text-sm text-on-surface-variant">
-                Bạn đã có tài khoản thẻ thư viện?{" "}
+                Bạn chưa có tài khoản thư viện?{" "}
                 <Link
-                  href="/login"
+                  href="/register"
                   className="font-bold text-secondary hover:underline transition-colors"
                 >
-                  Đăng nhập ngay
+                  Đăng ký thẻ mới ngay
                 </Link>
               </p>
             </div>
@@ -572,61 +438,119 @@ export default function RegisterPage() {
         <p>© 2026 UniLibrary · Cổng tri thức Đại học Quốc gia · Hệ thống quản lý thư viện số</p>
       </footer>
 
-      {/* MODAL: Đăng Ký Thành Công */}
-      {successAccount && (
+      {/* MODAL: Quên Mật Khẩu (Mock UI) */}
+      {isForgotModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface-container-lowest max-w-md w-full rounded-3xl border border-outline-variant/40 shadow-2xl p-6 sm:p-8 space-y-5 text-center">
-            {/* Animated Checkmark */}
-            <div className="w-16 h-16 rounded-full bg-[#DCFCE7] text-[#16A34A] flex items-center justify-center mx-auto shadow-inner">
-              <span className="material-symbols-outlined text-[36px]">verified</span>
+          <div className="bg-surface-container-lowest max-w-md w-full rounded-2xl border border-outline-variant/40 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b border-outline-variant/30 pb-3">
+              <h3 className="font-title-lg text-title-lg text-primary font-bold flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary">lock_reset</span>
+                <span>Khôi Phục Mật Khẩu</span>
+              </h3>
+              <button
+                onClick={() => setIsForgotModalOpen(false)}
+                className="text-on-surface-variant hover:text-primary p-1"
+                aria-label="Đóng"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <p className="text-xs text-on-surface-variant leading-relaxed">
+              Nhập địa chỉ email trường học đã đăng ký để nhận liên kết thiết lập lại mật khẩu hoặc liên hệ trực tiếp Bộ phận Dịch vụ Độc giả.
+            </p>
+
+            <form onSubmit={handleForgotSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-on-surface mb-1">
+                  Email sinh viên / học viên
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="name@university.edu.vn"
+                  className="w-full h-10 rounded-xl border border-outline-variant px-3 text-xs text-on-surface outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
+                />
+              </div>
+
+              <div className="p-3 bg-blue-50/60 border border-blue-200/60 rounded-xl text-[11px] text-blue-900 space-y-1">
+                <strong className="font-semibold block">Hỗ trợ khôi phục trực tiếp:</strong>
+                <p>• Quầy Dịch vụ Độc giả - Tầng 1 Thư viện trung tâm</p>
+                <p>• Hotline hỗ trợ kỹ thuật: (028) 3724 2160 (Ext: 1402)</p>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant/30">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsForgotModalOpen(false)}
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  disabled={forgotSubmitted}
+                >
+                  {forgotSubmitted ? (
+                    <span className="material-symbols-outlined text-[16px] animate-spin">
+                      progress_activity
+                    </span>
+                  ) : (
+                    <span className="material-symbols-outlined text-[16px]">send</span>
+                  )}
+                  <span>{forgotSubmitted ? "Đang xử lý..." : "Gửi yêu cầu khôi phục"}</span>
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: VNU SSO Thông báo mô phỏng */}
+      {isSsoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-surface-container-lowest max-w-md w-full rounded-2xl border border-outline-variant/40 shadow-2xl p-6 space-y-4 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-[28px]">hub</span>
             </div>
 
             <div>
-              <Badge variant="success" size="sm" className="mb-2">
-                Khởi tạo thành công
-              </Badge>
               <h3 className="font-title-lg text-title-lg text-primary font-bold">
-                Chào Mừng Bạn Đến UniLibrary!
+                Xác Thực VNU SSO (EduID)
               </h3>
               <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
-                Tài khoản thẻ thư viện số của bạn đã được thiết lập thành công trong phiên demo.
+                Cổng đăng nhập tập trung Single Sign-On của Đại học Quốc gia hiện đang ở chế độ giao diện mô phỏng (Frontend Demo) trước khi kết nối hệ thống Identity Provider thực tế.
               </p>
             </div>
 
-            {/* Created Account Details Card */}
-            <div className="p-4 bg-surface-container-low rounded-2xl text-xs text-left space-y-2 border border-outline-variant/30">
-              <div className="flex justify-between">
-                <span className="text-on-surface-variant">Họ và tên:</span>
-                <span className="font-bold text-primary">{successAccount.name}</span>
+            <div className="p-3 bg-surface-container-low rounded-xl text-xs text-left space-y-1 border border-outline-variant/30">
+              <div className="flex justify-between font-mono text-[11px]">
+                <span className="text-on-surface-variant">SSO Gateway:</span>
+                <span className="font-semibold text-primary">sso.vnu.edu.vn</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-on-surface-variant">Mã số độc giả:</span>
-                <span className="font-mono font-bold text-secondary">{successAccount.code}</span>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span className="text-on-surface-variant">Protocol:</span>
+                <span className="text-secondary font-semibold">OpenID Connect / SAML2</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-on-surface-variant">Email đăng nhập:</span>
-                <span className="font-medium text-on-surface">{successAccount.email}</span>
-              </div>
-              <div className="flex justify-between pt-1 border-t border-outline-variant/20 text-[11px] text-on-surface-variant">
-                <span>Trạng thái thẻ:</span>
-                <span className="font-semibold text-[#16A34A]">Sẵn sàng kích hoạt</span>
+              <div className="flex justify-between font-mono text-[11px]">
+                <span className="text-on-surface-variant">Trạng thái:</span>
+                <span className="text-amber-600 font-semibold">Chờ kết nối Backend API</span>
               </div>
             </div>
 
-            <p className="text-[11px] text-on-surface-variant italic">
-              Vui lòng chuyển sang trang Đăng nhập để sử dụng tài khoản vừa tạo.
-            </p>
-
-            <div className="pt-2">
+            <div className="flex justify-end pt-2 border-t border-outline-variant/30">
               <Button
                 variant="primary"
-                size="md"
+                size="sm"
                 fullWidth
-                onClick={() => router.push("/login")}
-                className="font-semibold shadow-md"
+                onClick={() => setIsSsoModalOpen(false)}
               >
-                <span className="material-symbols-outlined text-[18px]">login</span>
-                <span>Chuyển đến trang Đăng nhập</span>
+                Đã hiểu & Quay lại form đăng nhập
               </Button>
             </div>
           </div>
