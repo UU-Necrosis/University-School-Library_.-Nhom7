@@ -14,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentLang, setCurrentLang] = useState<"VN" | "EN">("VN");
-  const [user, setUser] = useState<{ name: string; code: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; code: string; email: string; unit: string } | null>(null);
   const [quickSearch, setQuickSearch] = useState("");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
 
   const displayName = user?.name || patron?.name || "Lê Hoàng Nam";
   const displayCode = user?.code || patron?.code || "UL-202488";
+    const displayUnit = user?.unit || (patron as { unit?: string } | undefined)?.unit || "ĐHQG-HCM";
   const isLoggedIn = Boolean(user || patron);
 
   const navLinks = [
@@ -237,7 +238,7 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
                               Học viên Cao học • K31
                             </p>
                             <p className="font-body-sm text-body-sm text-on-surface-variant text-[11px] truncate">
-                              Mã: {displayCode} • ĐHQG-HCM
+                              Mã: {displayCode} • {displayUnit}
                             </p>
                           </div>
                         </div>
