@@ -106,11 +106,11 @@ export default function ResearchServicesPage() {
             {mockServices.map((srv) => (
               <div
                 key={srv.id}
-                className="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant/40 hover:border-secondary transition-all shadow-sm flex flex-col justify-between gap-space-md"
+                className="bg-surface-container-lowest rounded-2xl p-space-lg border border-outline-variant/40 hover:border-secondary/60 hover:shadow-md transition-all shadow-sm flex flex-col justify-between gap-space-md"
               >
                 <div className="space-y-space-sm">
                   <div className="flex items-center gap-space-md">
-                    <div className="w-12 h-12 rounded-xl bg-tertiary/10 text-tertiary flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-tertiary/10 text-tertiary flex items-center justify-center flex-shrink-0">
                       <span className="material-symbols-outlined text-[28px]">{srv.icon}</span>
                     </div>
                     <div>
@@ -158,65 +158,68 @@ export default function ResearchServicesPage() {
 
         {/* Modal Consultation Form */}
         {activeForm && (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-space-md">
-            <div className="bg-surface-container-lowest rounded-xl shadow-2xl max-w-lg w-full p-space-lg space-y-space-md relative border border-outline-variant/40">
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-space-md animate-fade-in">
+            <div className="bg-surface-container-lowest rounded-2xl shadow-2xl max-w-lg w-full p-space-lg space-y-space-md relative border border-outline-variant/40">
               <button
                 onClick={() => setActiveForm(false)}
-                className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface"
+                className="absolute top-4 right-4 text-on-surface-variant hover:text-on-surface p-1"
                 aria-label="Đóng"
               >
-                <span className="material-symbols-outlined">close</span>
+                <span className="material-symbols-outlined text-[20px]">close</span>
               </button>
 
-              <h3 className="font-headline-sm text-headline-sm text-primary font-bold">
-                Phiếu Đăng ký Dịch vụ Hỗ trợ Nghiên cứu
-              </h3>
-              <p className="text-sm text-on-surface-variant">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-secondary text-[24px]">support_agent</span>
+                <h3 className="font-headline-sm text-headline-sm text-primary font-bold">
+                  Phiếu Đăng Ký Dịch Vụ Hỗ Trợ Nghiên Cứu
+                </h3>
+              </div>
+              <p className="text-xs text-on-surface-variant">
                 Thủ thư chuyên trách sẽ liên hệ lại qua Email sinh viên / cán bộ trong vòng 24 giờ làm việc.
               </p>
 
               {submitted ? (
-                <div className="p-4 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-lg text-center font-medium">
+                <div className="p-4 bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-xl text-center font-medium shadow-sm animate-fade-in">
                   ✅ Yêu cầu đã được ghi nhận thành công! Vui lòng kiểm tra email phản hồi.
                 </div>
               ) : (
                 <form onSubmit={handleSubmitConsultation} className="space-y-space-md">
                   <div>
-                    <label className="block text-xs font-semibold text-on-surface mb-1">Email ĐHQG (Email nhận kết quả)</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1.5">Email ĐHQG (Email nhận kết quả) <span className="text-red-500">*</span></label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="example@vnu.edu.vn"
-                      className="w-full h-11 px-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
+                      className="w-full h-11 px-3.5 border border-outline-variant rounded-xl text-xs sm:text-sm font-medium bg-surface-container-lowest text-on-surface outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-on-surface mb-1">Tên đề tài / Chủ đề nghiên cứu</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1.5">Tên đề tài / Chủ đề nghiên cứu <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
                       placeholder="Ví dụ: Kiểm tra Turnitin bài báo Scopus về Machine Learning..."
-                      className="w-full h-11 px-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
+                      className="w-full h-11 px-3.5 border border-outline-variant rounded-xl text-xs sm:text-sm font-medium bg-surface-container-lowest text-on-surface outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-on-surface mb-1">Ghi chú cụ thể</label>
+                    <label className="block text-xs font-semibold text-on-surface mb-1.5">Ghi chú cụ thể</label>
                     <textarea
                       rows={3}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder="Mô tả chi tiết tài liệu cần mượn hoặc yêu cầu hỗ trợ đặc biệt..."
-                      className="w-full p-3 border border-outline-variant rounded-md text-sm font-medium bg-transparent focus:outline-none focus:border-secondary"
+                      className="w-full p-3 border border-outline-variant rounded-xl text-xs sm:text-sm font-medium bg-surface-container-lowest text-on-surface outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
                     ></textarea>
                   </div>
 
-                  <div className="pt-2 flex justify-end gap-space-xs">
+                  <div className="pt-2 flex justify-end gap-space-xs border-t border-outline-variant/30">
                     <Button
                       type="button"
                       variant="outline"

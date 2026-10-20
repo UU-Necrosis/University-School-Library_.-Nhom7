@@ -47,3 +47,26 @@
 - Không phá UI và cấu trúc folder hiện tại.
 - Bước tiếp theo: audit source backend, database và API trước khi bắt đầu tích hợp.
 
+### 2026-10-17: Hoàn thiện đồng bộ Auth, MSSV và dọn dẹp Homepage (P0, P1, P2)
+
+- **P0 — Đăng ký MSSV & Đồng bộ Backend:**
+  - Đồng bộ trường `code` thành Mã sinh viên / học viên / mã độc giả (`MSSV`). Lưu trữ dạng chuỗi (`text`) trong Postgres để giữ trọn vẹn số `0` ở đầu (vd: `0987654321`).
+  - Xử lý race condition và bắt lỗi `P2002` (Unique Constraint) trong `AuthService`, trả về mã lỗi `409 Conflict` kèm định danh trường cụ thể (`field: 'code'` hoặc `field: 'email'`).
+  - Cập nhật `HttpExceptionFilter` trả về `field` và `errors` dạng cấu trúc, form đăng ký hiển thị thông báo lỗi cụ thể dưới từng ô nhập liệu và giữ nguyên dữ liệu đã nhập.
+  - Mật khẩu băm an toàn qua bcrypt (10 rounds); loại bỏ triệt để mật khẩu và hash khỏi mọi response của API (`auth/register`, `auth/login`, `auth/me`).
+  - Đăng ký công khai chỉ cấp mặc định quyền `Role.STUDENT`, chặn client tự leo quyền.
+- **P0 — Khắc phục trạng thái khách hiển thị "Lê Hoàng Nam":**
+  - Xây dựng `AuthContext` và `AuthProvider` quản lý 3 trạng thái phiên chuẩn: `loading`, `unauthenticated`, `authenticated`.
+  - Loại bỏ hoàn toàn fallback dữ liệu mẫu "Lê Hoàng Nam", "UL-202488" và dữ liệu mượn sách giả trên toàn bộ Header, Homepage và các trang phân hệ độc giả.
+  - Tạo `PatronGuard` bảo vệ các trang `/the-thu-vien/*`. Khách chưa đăng nhập nhận banner hướng dẫn đăng nhập thân thiện và chuyển hướng về trang đích chính xác (`/login?redirect=...`).
+  - Xóa cache và dữ liệu tạm khi đăng xuất (`unilibrary_user_reservations`, `unilibrary_saved_books`, tokens) để tránh lẫn lộn dữ liệu giữa các phiên đăng nhập.
+- **P1 — Đồng bộ sách & Dọn dẹp nội dung tĩnh:**
+  - Thống nhất toàn bộ sách trang chủ với `CATALOG_BOOKS` (dùng chung ID, ảnh bìa, danh mục, tác giả và trạng thái còn/hết bản sao).
+  - Kết nối hệ thống bookmark giữa trang chủ, danh mục, chi tiết và tủ sách cá nhân (`/the-thu-vien/da-luu`).
+  - Xóa bỏ mục "Lớp Tập Huấn Kỹ Năng Thông Tin & Sự Kiện", các thẻ workshop và component `EventsWorkshopsSection.tsx`.
+  - Thay thế số liệu phóng đại (1.2M+ sách, 240+ CSDL quốc tế, SSO Proxy) bằng thông tin phục vụ học liệu thực tế của thư viện đại học.
+  - Menu Drawer trái chuẩn hóa đúng 5 mục: Danh mục sách (xổ thể loại), Tác giả, Đặt sách, Hướng dẫn, Quy định.
+- **P2 — Kiểm thử & Tối ưu hóa:**
+  - Cả hai dự án Backend (NestJS) và Frontend (Next.js) biên dịch thành công không còn lỗi TypeScript (`npx tsc --noEmit`).
+  - Đã chạy kiểm thử tự động API và xác nhận giao diện qua browser subagent.
+

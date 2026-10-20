@@ -80,27 +80,27 @@ export const LiveCapacitySection: React.FC = () => {
           {/* Metric Counter Strip */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-space-lg pt-space-lg border-t border-primary-container">
             <div>
-              <span className="font-headline-display text-headline-display text-primary-fixed block font-bold">1.2M+</span>
+              <span className="font-headline-display text-headline-display text-primary-fixed block font-bold">15.000+</span>
               <span className="font-label-md text-label-md text-on-primary-container uppercase tracking-wider block">
-                Tài liệu số & Sách in
+                Giáo trình & Sách chuyên ngành
               </span>
             </div>
             <div>
-              <span className="font-headline-display text-headline-display text-primary-fixed block font-bold">48.000+</span>
+              <span className="font-headline-display text-headline-display text-primary-fixed block font-bold">8+</span>
               <span className="font-label-md text-label-md text-on-primary-container uppercase tracking-wider block">
-                Bạn đọc thường xuyên
+                Khoa & Chuyên ngành đào tạo
               </span>
             </div>
             <div>
-              <span className="font-headline-display text-headline-display text-primary-fixed block font-bold">240+</span>
+              <span className="font-headline-display text-headline-display text-primary-fixed block font-bold">100%</span>
               <span className="font-label-md text-label-md text-on-primary-container uppercase tracking-wider block">
-                Đối tác CSDL quốc tế
+                Được chuẩn hóa mã số & vị trí
               </span>
             </div>
             <div>
-              <span className="font-headline-display text-headline-display text-[#16A34A] block font-bold">99.8%</span>
+              <span className="font-headline-display text-headline-display text-[#16A34A] block font-bold">T2 - T7</span>
               <span className="font-label-md text-label-md text-on-primary-container uppercase tracking-wider block">
-                Thời gian sẵn sàng máy chủ
+                07:30 - 21:00 Phục vụ bạn đọc
               </span>
             </div>
           </div>

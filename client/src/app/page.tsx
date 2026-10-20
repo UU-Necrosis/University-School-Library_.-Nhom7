@@ -7,33 +7,18 @@ import { HeroSearchSection } from "@/components/home/HeroSearchSection";
 import { ServicesSection } from "@/components/home/ServicesSection";
 import { LiveCapacitySection } from "@/components/home/LiveCapacitySection";
 import { CuratedResourcesSection } from "@/components/home/CuratedResourcesSection";
-import { DatabasesDirectorySection } from "@/components/home/DatabasesDirectorySection";
-import { EventsWorkshopsSection } from "@/components/home/EventsWorkshopsSection";
 import { AskLibrarianSection } from "@/components/home/AskLibrarianSection";
-import { PatronInfo } from "@/types/library";
-
-const mockPatron: PatronInfo = {
-  name: "Lê Hoàng Nam",
-  code: "UL-202488",
-  role: "Học viên Cao học • K.31",
-  department: "Khoa Khoa học & Kỹ thuật Thông tin",
-  ssoConnected: true,
-  activeLoans: 3,
-  maxLoans: 8,
-};
 
 export default function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-surface">
-      <Header patron={mockPatron} />
+      <Header />
 
       <main className="w-full pt-32 flex-1">
-        <HeroSearchSection patron={mockPatron} />
+        <HeroSearchSection />
         <ServicesSection />
         <LiveCapacitySection />
         <CuratedResourcesSection />
-        <DatabasesDirectorySection />
-        <EventsWorkshopsSection />
         <AskLibrarianSection />
       </main>
 

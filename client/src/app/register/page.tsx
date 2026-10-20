@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Badge } from "@/components/ui";
 import { Account } from "@/types/library";
+import { registerApi } from "@/services/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -20,6 +21,13 @@ export default function RegisterPage() {
   const [agreeTerms, setAgreeTerms] = useState(true);
 
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string;
+    code?: string;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  }>({});
   const [loading, setLoading] = useState(false);
   const [successAccount, setSuccessAccount] = useState<Account | null>(null);
 
@@ -42,21 +50,28 @@ export default function RegisterPage() {
     return score;
   }, [passwordCriteria]);
 
-  function handleRegister(e: React.FormEvent<HTMLFormElement>) {
+  async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+
+    const newFieldErrors: {
+      name?: string;
+      code?: string;
+      email?: string;
+      password?: string;
+      confirmPassword?: string;
+    } = {};
 
     // 1. Kiểm tra họ và tên
     if (name.trim().length < 2) {
-      setError("Vui lòng nhập họ và tên hợp lệ (tối thiểu 2 ký tự).");
-      return;
+      newFieldErrors.name = "Vui lòng nhập họ và tên hợp lệ (tối thiểu 2 ký tự).";
     }
 
-    // 2. Kiểm tra mã sinh viên / độc giả
+    // 2. Kiểm tra mã sinh viên / độc giả (giữ số 0 đầu bằng chuỗi, chuẩn hóa khoảng trắng)
     const normalizedCode = code.trim().toUpperCase();
     if (!normalizedCode) {
-      setError("Vui lòng nhập mã sinh viên, học viên hoặc mã độc giả.");
-      return;
+      newFieldErrors.code = "Vui lòng nhập mã sinh viên / học viên / mã độc giả.";
     }
 
     // 3. Kiểm tra email hợp lệ
@@ -64,29 +79,26 @@ export default function RegisterPage() {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!normalizedEmail) {
-      setError("Vui lòng nhập địa chỉ email.");
-      return;
-    }
-
-    if (!normalizedEmail.includes("@")) {
-      setError("Email chưa đầy đủ. Vui lòng nhập thêm tên miền email (ví dụ: @university.edu.vn hoặc @gmail.com).");
-      return;
-    }
-
-    if (!emailRegex.test(normalizedEmail)) {
-      setError("Địa chỉ email không đúng định dạng. Vui lòng kiểm tra lại.");
-      return;
+      newFieldErrors.email = "Vui lòng nhập địa chỉ email.";
+    } else if (!normalizedEmail.includes("@")) {
+      newFieldErrors.email = "Email chưa đầy đủ. Vui lòng nhập thêm tên miền email (ví dụ: @university.edu.vn hoặc @gmail.com).";
+    } else if (!emailRegex.test(normalizedEmail)) {
+      newFieldErrors.email = "Địa chỉ email không đúng định dạng. Vui lòng kiểm tra lại.";
     }
 
     // 4. Kiểm tra tiêu chí mật khẩu mạnh
     if (strengthScore < 4) {
-      setError("Mật khẩu chưa đạt yêu cầu bảo mật. Vui lòng đảm bảo đầy đủ 4 tiêu chí bên dưới.");
-      return;
+      newFieldErrors.password = "Mật khẩu chưa đạt yêu cầu bảo mật. Vui lòng đảm bảo đầy đủ 4 tiêu chí bên dưới.";
     }
 
     // 5. Kiểm tra xác nhận mật khẩu
     if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp với mật khẩu đã nhập.");
+      newFieldErrors.confirmPassword = "Mật khẩu xác nhận không khớp với mật khẩu đã nhập.";
+    }
+
+    if (Object.keys(newFieldErrors).length > 0) {
+      setFieldErrors(newFieldErrors);
+      setError("Vui lòng hoàn thiện đúng các trường thông tin có đánh dấu lỗi bên dưới.");
       return;
     }
 
@@ -99,45 +111,33 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // 7. Lấy danh sách tài khoản từ localStorage
-      const accounts: Account[] = JSON.parse(
-        localStorage.getItem("unilibrary_accounts") || "[]"
-      );
-
-      // 8. Kiểm tra trùng email hoặc mã sinh viên
-      const exists = accounts.some(
-        (account) =>
-          account.email.toLowerCase() === normalizedEmail ||
-          account.code.toUpperCase() === normalizedCode
-      );
-
-      if (exists) {
-        setError("Email hoặc mã sinh viên/độc giả này đã được đăng ký trên hệ thống.");
-        setLoading(false);
-        return;
-      }
-
-      // 9. Tạo tài khoản mới
-      const newAccount: Account = {
+      const res = await registerApi({
         name: name.trim(),
         code: normalizedCode,
         email: normalizedEmail,
         password,
+      });
+
+      const newAccount: Account = {
+        name: res.data.user.name,
+        code: res.data.user.code,
+        email: res.data.user.email,
+        password: "••••••••",
       };
 
-      accounts.push(newAccount);
-
-      // 10. Lưu vào localStorage
-      localStorage.setItem("unilibrary_accounts", JSON.stringify(accounts));
-
-      // 11. Bật modal thành công
-      setTimeout(() => {
-        setLoading(false);
-        setSuccessAccount(newAccount);
-      }, 500);
-    } catch (err) {
+      setLoading(false);
+      setSuccessAccount(newAccount);
+    } catch (err: any) {
       console.error("Lỗi đăng ký:", err);
-      setError("Không thể khởi tạo tài khoản trong phiên này. Vui lòng thử lại.");
+      const errMsg = err?.message || "Không thể khởi tạo tài khoản trong phiên này. Vui lòng thử lại.";
+      setError(errMsg);
+
+      if (err?.field === "code" || errMsg.toLowerCase().includes("mã sinh viên") || errMsg.toLowerCase().includes("mã độc giả")) {
+        setFieldErrors((prev) => ({ ...prev, code: errMsg }));
+      } else if (err?.field === "email" || errMsg.toLowerCase().includes("email")) {
+        setFieldErrors((prev) => ({ ...prev, email: errMsg }));
+      }
+
       setLoading(false);
     }
   }
@@ -243,7 +243,7 @@ export default function RegisterPage() {
             {/* Bottom Institutional Seal */}
             <div className="relative z-10 pt-6 mt-6 border-t border-white/15 flex items-center justify-between text-[11px] text-blue-200">
               <span>Đại học Quốc gia</span>
-              <span className="font-mono">VNU EduID Verified</span>
+              <span className="font-mono">UniLibrary Portal</span>
             </div>
           </div>
 
@@ -280,14 +280,27 @@ export default function RegisterPage() {
                       autoComplete="name"
                       required
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: undefined }));
+                      }}
                       placeholder="VD: Nguyễn Văn An"
-                      className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+                      className={`w-full h-11 rounded-xl border bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:ring-2 placeholder:text-on-surface-variant/50 ${
+                        fieldErrors.name
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                          : "border-outline-variant focus:border-secondary focus:ring-secondary/20"
+                      }`}
                     />
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
                       person
                     </span>
                   </div>
+                  {fieldErrors.name && (
+                    <p className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      <span>{fieldErrors.name}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Mã sinh viên / độc giả */}
@@ -296,7 +309,7 @@ export default function RegisterPage() {
                     htmlFor="reg-code"
                     className="block text-xs font-semibold text-on-surface mb-1.5"
                   >
-                    Mã sinh viên / học viên / mã độc giả <span className="text-red-500">*</span>
+                    Mã sinh viên / học viên / mã độc giả (MSSV) <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -304,14 +317,27 @@ export default function RegisterPage() {
                       type="text"
                       required
                       value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      placeholder="VD: UL-202488 hoặc MSSV 2024001"
-                      className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+                      onChange={(e) => {
+                        setCode(e.target.value);
+                        if (fieldErrors.code) setFieldErrors((prev) => ({ ...prev, code: undefined }));
+                      }}
+                      placeholder="VD: 2024001 hoặc UL-202488 (chuỗi ký tự, giữ số 0 đầu)"
+                      className={`w-full h-11 rounded-xl border bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:ring-2 placeholder:text-on-surface-variant/50 ${
+                        fieldErrors.code
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                          : "border-outline-variant focus:border-secondary focus:ring-secondary/20"
+                      }`}
                     />
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
                       badge
                     </span>
                   </div>
+                  {fieldErrors.code && (
+                    <p className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      <span>{fieldErrors.code}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Email */}
@@ -329,14 +355,27 @@ export default function RegisterPage() {
                       autoComplete="email"
                       required
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) setFieldErrors((prev) => ({ ...prev, email: undefined }));
+                      }}
                       placeholder="name@university.edu.vn hoặc name@gmail.com"
-                      className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+                      className={`w-full h-11 rounded-xl border bg-surface-container-lowest px-3.5 pl-10 text-xs sm:text-sm text-on-surface outline-none transition focus:ring-2 placeholder:text-on-surface-variant/50 ${
+                        fieldErrors.email
+                          ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                          : "border-outline-variant focus:border-secondary focus:ring-secondary/20"
+                      }`}
                     />
                     <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">
                       mail
                     </span>
                   </div>
+                  {fieldErrors.email && (
+                    <p className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      <span>{fieldErrors.email}</span>
+                    </p>
+                  )}
                 </div>
 
                 {/* Mật khẩu & Xác nhận mật khẩu (Grid 2 cột trên sm) */}
@@ -357,9 +396,16 @@ export default function RegisterPage() {
                         required
                         minLength={8}
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }));
+                        }}
                         placeholder="Tối thiểu 8 ký tự"
-                        className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-9 pr-9 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+                        className={`w-full h-11 rounded-xl border bg-surface-container-lowest px-3.5 pl-9 pr-9 text-xs sm:text-sm text-on-surface outline-none transition focus:ring-2 placeholder:text-on-surface-variant/50 ${
+                          fieldErrors.password
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                            : "border-outline-variant focus:border-secondary focus:ring-secondary/20"
+                        }`}
                       />
                       <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[17px]">
                         lock
@@ -375,6 +421,12 @@ export default function RegisterPage() {
                         </span>
                       </button>
                     </div>
+                    {fieldErrors.password && (
+                      <p className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">error</span>
+                        <span>{fieldErrors.password}</span>
+                      </p>
+                    )}
                   </div>
 
                   {/* Xác nhận mật khẩu */}
@@ -392,9 +444,16 @@ export default function RegisterPage() {
                         autoComplete="new-password"
                         required
                         value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onChange={(e) => {
+                          setConfirmPassword(e.target.value);
+                          if (fieldErrors.confirmPassword) setFieldErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+                        }}
                         placeholder="Nhập lại mật khẩu"
-                        className="w-full h-11 rounded-xl border border-outline-variant bg-surface-container-lowest px-3.5 pl-9 pr-9 text-xs sm:text-sm text-on-surface outline-none transition focus:border-secondary focus:ring-2 focus:ring-secondary/20 placeholder:text-on-surface-variant/50"
+                        className={`w-full h-11 rounded-xl border bg-surface-container-lowest px-3.5 pl-9 pr-9 text-xs sm:text-sm text-on-surface outline-none transition focus:ring-2 placeholder:text-on-surface-variant/50 ${
+                          fieldErrors.confirmPassword
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-200"
+                            : "border-outline-variant focus:border-secondary focus:ring-secondary/20"
+                        }`}
                       />
                       <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[17px]">
                         lock_reset
@@ -410,6 +469,12 @@ export default function RegisterPage() {
                         </span>
                       </button>
                     </div>
+                    {fieldErrors.confirmPassword && (
+                      <p className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">error</span>
+                        <span>{fieldErrors.confirmPassword}</span>
+                      </p>
+                    )}
                   </div>
                 </div>
 

@@ -26,46 +26,46 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 2 */}
+          {/* Column 2: 5 Core Nav Links */}
           <div className="space-y-space-md">
             <span className="font-title-md text-title-md text-primary-fixed block font-bold">
-              Cơ sở dữ liệu học thuật
+              Danh mục & Điều hướng
             </span>
             <ul className="space-y-space-sm font-body-sm text-body-sm text-on-primary-container">
               <li>
-                <a href="#csdl" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/danh-muc" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                  Cơ sở dữ liệu IEEE Xplore
-                </a>
+                  Danh mục sách & Thể loại DDC
+                </Link>
               </li>
               <li>
-                <a href="#csdl" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/tac-gia" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                  Springer Nature Journals
-                </a>
+                  Danh bạ tác giả & Học giả
+                </Link>
               </li>
               <li>
-                <a href="#csdl" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/dat-sach" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                  Elsevier ScienceDirect
-                </a>
+                  Tìm & Đặt sách (FIFO Hold)
+                </Link>
               </li>
               <li>
-                <a href="#csdl" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/huong-dan" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                  Scopus & Web of Science
-                </a>
+                  Hướng dẫn sử dụng 6 bước
+                </Link>
               </li>
               <li>
-                <a href="#csdl" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/quy-dinh" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                  Thư viện Luận văn & Đồ án tốt nghiệp
-                </a>
+                  Quy định mượn trả & Hạn mức
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 3 */}
+          {/* Column 3: Hours & Campuses */}
           <div className="space-y-space-md">
             <span className="font-title-md text-title-md text-primary-fixed block font-bold">
               Giờ phục vụ các cơ sở
@@ -102,22 +102,16 @@ export const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#ask" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/huong-dan" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[16px]">support_agent</span>
-                  Thủ thư trực tuyến (Live Chat)
-                </a>
+                  Thủ thư trực tuyến & Hướng dẫn
+                </Link>
               </li>
               <li>
-                <a href="#faq" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
-                  <span className="material-symbols-outlined text-[16px]">quiz</span>
-                  Câu hỏi thường gặp (FAQ)
-                </a>
-              </li>
-              <li>
-                <a href="#rules" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
+                <Link href="/quy-dinh" className="hover:text-on-primary transition-colors flex items-center gap-space-xs">
                   <span className="material-symbols-outlined text-[16px]">menu_book</span>
                   Quy chế mượn trả & gia hạn sách
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -126,15 +120,12 @@ export const Footer: React.FC = () => {
         <div className="border-t border-primary-container/80 pt-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md font-body-sm text-body-sm text-on-primary-container">
           <div>Bản quyền © 2026 UniLibrary System. Tất cả các quyền được bảo lưu.</div>
           <div className="flex items-center gap-space-lg">
-            <a href="#privacy" className="hover:text-on-primary transition-colors">
-              Chính sách quyền riêng tư
-            </a>
-            <a href="#terms" className="hover:text-on-primary transition-colors">
-              Điều khoản sử dụng tài nguyên số
-            </a>
-            <a href="#accessibility" className="hover:text-on-primary transition-colors">
-              Khả năng tiếp cận
-            </a>
+            <Link href="/quy-dinh" className="hover:text-on-primary transition-colors">
+              Chính sách & Quy định
+            </Link>
+            <Link href="/huong-dan" className="hover:text-on-primary transition-colors">
+              Hướng dẫn độc giả
+            </Link>
           </div>
         </div>
       </div>

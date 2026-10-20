@@ -1,52 +1,13 @@
-"use client";
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumb, Badge, Button } from "@/components/ui";
 import { ReservationItem } from "@/types/library";
-
-const initialReservations: ReservationItem[] = [
-  {
-    id: "RES-2026-008",
-    bookId: "4",
-    bookTitle: "Nghiên cứu Tác động của Biến đổi Khí hậu đến Đồng bằng Sông Cửu Long",
-    author: "TS. Phạm Quốc Hùng",
-    callNumber: "QC 903 .P43 2022",
-    requestDate: "28/09/2026",
-    status: "Sẵn sàng nhận",
-    pickupDeadline: "05/10/2026 (20:00)",
-    campus: "Cơ sở 1 (Khuôn viên Trung tâm)",
-    barcode: "UL-TS-2022-02",
-  },
-  {
-    id: "RES-2026-012",
-    bookId: "b4",
-    bookTitle: "Quy Hoạch Lưới Điện Thông Minh & Tích Hợp Năng Lượng Tái Tạo",
-    author: "PGS.TS. Nguyễn Văn Thịnh",
-    callNumber: "TK 1005 .C55 2023",
-    requestDate: "30/09/2026",
-    status: "Đang chờ",
-    queuePosition: 1,
-    estimatedAvailableDate: "28/10/2026",
-    campus: "Cơ sở 1 (Khuôn viên Trung tâm)",
-  },
-  {
-    id: "RES-2026-002",
-    bookId: "1",
-    bookTitle: "Kinh tế học Lượng tử và Ứng dụng trong Tài chính Hiện đại",
-    author: "GS.TS. Nguyễn Văn An",
-    callNumber: "HB 137 .N573K 2024",
-    requestDate: "10/08/2026",
-    status: "Đã hết hạn",
-    pickupDeadline: "15/08/2026",
-    campus: "Cơ sở 1 (Khuôn viên Trung tâm)",
-  },
-];
+import { PatronGuard } from "@/components/layout/PatronGuard";
 
 export default function ReservationsPage() {
-  const [reservations, setReservations] = useState<ReservationItem[]>(initialReservations);
+  const [reservations, setReservations] = useState<ReservationItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -54,13 +15,28 @@ export default function ReservationsPage() {
   const [pickupModalItem, setPickupModalItem] = useState<ReservationItem | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("unilibrary_user_reservations");
+      if (stored) {
+        setReservations(JSON.parse(stored));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const handleConfirmCancel = () => {
     if (!cancelModalItem) return;
-    setReservations((prev) =>
-      prev.map((item) =>
-        item.id === cancelModalItem.id ? { ...item, status: "Đã hủy" } : item
-      )
+    const updated = reservations.map((item) =>
+      item.id === cancelModalItem.id ? { ...item, status: "Đã hủy" as const } : item
     );
+    setReservations(updated);
+    try {
+      localStorage.setItem("unilibrary_user_reservations", JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
     setToastMessage(`Đã hủy đặt trước cho cuốn "${cancelModalItem.bookTitle}" thành công.`);
     setCancelModalItem(null);
     setTimeout(() => setToastMessage(null), 4000);
@@ -98,6 +74,7 @@ export default function ReservationsPage() {
       <Header />
 
       <main className="w-full pt-32 flex-1 pb-space-xl">
+        <PatronGuard pageTitle="Sách Đặt Trước & Hàng Đợi">
         {/* Banner & Breadcrumb */}
         <section className="bg-surface-container-low border-b border-outline-variant/30 py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
@@ -122,26 +99,30 @@ export default function ReservationsPage() {
             <div className="flex items-center gap-space-xs overflow-x-auto pt-space-xs border-b border-outline-variant/30">
               <Link
                 href="/the-thu-vien"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Sách đang mượn & Thẻ ID
+                <span className="material-symbols-outlined text-[18px]">badge</span>
+                <span>Sách đang mượn & Thẻ ID</span>
               </Link>
               <Link
                 href="/the-thu-vien/lich-su"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Lịch sử mượn trả
+                <span className="material-symbols-outlined text-[18px]">history</span>
+                <span>Lịch sử mượn trả</span>
               </Link>
               <Link
                 href="/the-thu-vien/dat-truoc"
-                className="px-space-md py-2 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/60 rounded-t-lg"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/80 rounded-t-xl flex items-center gap-1.5 shadow-xs"
               >
-                Sách đặt trước ({readyCount + waitingCount})
+                <span className="material-symbols-outlined text-[18px]">event_seat</span>
+                <span>Sách đặt trước ({readyCount + waitingCount})</span>
               </Link>
               <Link
                 href="/the-thu-vien/phi-phat"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
+                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
                 <span>Phí phạt & Khoản nợ</span>
                 <span className="px-1.5 py-0.5 text-xs font-semibold bg-[#FEE2E2] text-[#DC2626] rounded-full">
                   2
@@ -154,12 +135,12 @@ export default function ReservationsPage() {
         {/* Toast Notification */}
         {toastMessage && (
           <div className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-md">
-            <div className="p-space-md bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-xl flex items-center justify-between shadow-sm">
+            <div className="p-space-md bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-2xl flex items-center justify-between shadow-sm animate-fade-in">
               <div className="flex items-center gap-space-xs font-title-sm text-title-sm">
                 <span className="material-symbols-outlined text-[#16A34A] text-[22px]">check_circle</span>
                 <span>{toastMessage}</span>
               </div>
-              <button onClick={() => setToastMessage(null)} className="text-[#166534] hover:opacity-70">
+              <button onClick={() => setToastMessage(null)} className="text-[#166534] hover:opacity-70 p-1">
                 <span className="material-symbols-outlined text-[18px]">close</span>
               </button>
             </div>
@@ -169,7 +150,7 @@ export default function ReservationsPage() {
         {/* Stats Row */}
         <section className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-lg">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
               <div>
                 <span className="font-label-md text-label-md text-on-surface-variant">Sẵn sàng nhận tại quầy</span>
                 <p className="font-headline-md text-headline-md font-bold text-[#166534] mt-0.5">{readyCount}</p>
@@ -180,7 +161,7 @@ export default function ReservationsPage() {
               </div>
             </div>
 
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
               <div>
                 <span className="font-label-md text-label-md text-on-surface-variant">Đang chờ trong hàng đợi</span>
                 <p className="font-headline-md text-headline-md font-bold text-secondary mt-0.5">{waitingCount}</p>
@@ -191,7 +172,7 @@ export default function ReservationsPage() {
               </div>
             </div>
 
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm flex items-center justify-between">
               <div>
                 <span className="font-label-md text-label-md text-on-surface-variant">Hết hạn / Đã hủy</span>
                 <p className="font-headline-md text-headline-md font-bold text-on-surface-variant mt-0.5">{expiredCount}</p>
@@ -206,7 +187,7 @@ export default function ReservationsPage() {
 
         {/* Toolbar Filter */}
         <section className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-lg space-y-space-md">
-          <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm">
+          <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm">
             <div className="relative flex-1 flex items-center">
               <span className="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
               <input
@@ -214,12 +195,12 @@ export default function ReservationsPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm theo tên sách, mã đặt trước (RES-...), tác giả..."
-                className="w-full h-10 pl-10 pr-4 font-body-md text-body-md bg-surface-container-low rounded-lg border border-outline-variant/30 focus:outline-none focus:border-secondary"
+                className="w-full h-11 pl-10 pr-4 font-body-md text-body-md bg-surface-container-low rounded-xl border border-outline-variant/30 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-3 text-outline hover:text-on-surface"
+                  className="absolute right-3 text-outline hover:text-on-surface p-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">close</span>
                 </button>
@@ -230,7 +211,7 @@ export default function ReservationsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 px-3 bg-surface-container-low font-title-sm text-title-sm text-primary rounded-lg border border-outline-variant/30 focus:outline-none cursor-pointer"
+                className="h-11 px-3 bg-surface-container-low font-title-sm text-title-sm text-primary rounded-xl border border-outline-variant/30 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 cursor-pointer"
               >
                 <option value="all">Tất cả trạng thái</option>
                 <option value="Sẵn sàng nhận">Sẵn sàng nhận tại quầy</option>
@@ -478,6 +459,7 @@ export default function ReservationsPage() {
             </div>
           </div>
         )}
+        </PatronGuard>
       </main>
 
       <Footer />

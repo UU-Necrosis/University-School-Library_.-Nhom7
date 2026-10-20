@@ -10,6 +10,9 @@ client/out/
 # production
 client/build/
 client/dist/
+server/dist/
+dist/
+build/
 
 # misc
 .DS_Store
@@ -30,3 +33,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agents, skills and tools
+.agents/
+.superpowers/
+superpowers/
+ui-ux-pro-max/

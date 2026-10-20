@@ -88,22 +88,22 @@ export default function DatabasesPage() {
             </div>
 
             {/* Filter Search */}
-            <div className="mt-space-md bg-surface-container-lowest rounded-xl p-space-sm shadow-lg flex flex-col md:flex-row items-center gap-space-sm text-on-surface">
+            <div className="mt-space-md bg-surface-container-lowest rounded-2xl p-space-xs shadow-lg flex flex-col md:flex-row items-center gap-space-xs text-on-surface border border-white/20">
               <div className="relative flex-1 w-full flex items-center">
-                <span className="material-symbols-outlined absolute left-space-md text-on-surface-variant">search</span>
+                <span className="material-symbols-outlined absolute left-space-md text-on-surface-variant text-[22px]">search</span>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Tìm kiếm cơ sở dữ liệu (ví dụ: Scopus, IEEE, Springer, Toán học)..."
-                  className="w-full h-12 pl-12 pr-space-md font-body-md bg-transparent focus:outline-none"
+                  className="w-full h-12 pl-12 pr-space-md font-body-md bg-transparent focus:outline-none placeholder:text-on-surface-variant/60"
                 />
               </div>
 
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="h-12 px-space-md bg-surface-container-low font-title-sm text-primary rounded-lg focus:outline-none cursor-pointer w-full md:w-auto"
+                className="h-12 px-space-md bg-surface-container-low font-title-sm text-primary rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary/20 cursor-pointer w-full md:w-auto border border-outline-variant/30"
               >
                 <option value="all">Tất cả ngành học</option>
                 <option value="STEM">STEM & Công nghệ</option>
@@ -131,7 +131,7 @@ export default function DatabasesPage() {
             {filteredDatabases.map((db) => (
               <div
                 key={db.id}
-                className="bg-surface-container-lowest rounded-xl p-space-lg border border-outline-variant/40 hover:border-secondary transition-all shadow-sm flex flex-col justify-between gap-space-md"
+                className="bg-surface-container-lowest rounded-2xl p-space-lg border border-outline-variant/40 hover:border-secondary/60 hover:shadow-md transition-all shadow-sm flex flex-col justify-between gap-space-md"
               >
                 <div className="space-y-space-xs">
                   <div className="flex items-center justify-between gap-space-xs">
@@ -144,7 +144,7 @@ export default function DatabasesPage() {
                     </span>
                   </div>
 
-                  <h3 className="font-headline-sm text-headline-sm text-primary font-semibold hover:text-secondary cursor-pointer">
+                  <h3 className="font-headline-sm text-headline-sm text-primary font-semibold hover:text-secondary cursor-pointer transition-colors">
                     {db.name}
                   </h3>
                   <p className="font-label-sm text-label-sm text-on-surface-variant font-mono">

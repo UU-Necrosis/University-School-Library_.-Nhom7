@@ -1,43 +1,30 @@
-"use client";
-
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PatronInfo, SearchScope } from "@/types/library";
+import { SearchScope } from "@/types/library";
+import { useAuth } from "@/context/AuthContext";
 
-interface HeroSearchSectionProps {
-  patron?: PatronInfo;
-}
-
-export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({ patron }) => {
+export const HeroSearchSection: React.FC = () => {
   const router = useRouter();
-  const [activeScope, setActiveScope] = useState<SearchScope>("all");
+  const { authStatus, user } = useAuth();
+  const [activeScope, setActiveScope] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [fieldScope, setFieldScope] = useState("anywhere");
 
-  const patronData = patron || {
-    name: "Lê Hoàng Nam",
-    code: "UL-202488",
-    role: "Học viên Cao học • K.31",
-    department: "Khoa Khoa học & Kỹ thuật Thông tin",
-    ssoConnected: true,
-    activeLoans: 3,
-    maxLoans: 8,
-  };
-
-  const placeholders: Record<SearchScope, string> = {
-    all: "Nhập tên sách, tác giả, ISBN, DOI hoặc từ khóa chuyên ngành...",
-    books: "Tìm giáo trình, sách chuyên khảo, vị trí kệ sách và mã xếp giá...",
-    journals: "Nhập tên bài báo, tác giả, số ISSN, DOI hoặc tạp chí Scopus/ISI...",
-    theses: "Tìm luận án tiến sĩ, luận văn thạc sĩ, khóa luận tốt nghiệp theo chuyên ngành...",
-    databases: "Tìm kiếm cơ sở dữ liệu IEEE, ScienceDirect, Springer, JSTOR...",
+  const placeholders: Record<string, string> = {
+    all: "Nhập nhan đề sách, tên tác giả, ký hiệu DDC, ISBN...",
+    cong_nghe: "Tìm sách Công nghệ thông tin, Trí tuệ nhân tạo, Vi mạch...",
+    kinh_te: "Tìm giáo trình Kinh tế, Quản trị kinh doanh, Tài chính định lượng...",
+    khoa_hoc: "Tìm tài liệu Khoa học vật liệu, Vật lý bán dẫn, Môi trường...",
+    van_hoc: "Tìm tác phẩm Văn học, Tiểu thuyết kinh điển, Truyện tranh...",
   };
 
   const trendingKeywords = [
     "Trí tuệ nhân tạo (AI)",
     "Kinh tế lượng tử",
-    "Biến đổi khí hậu ĐBSCL",
-    "Chất bán dẫn & Vi mạch",
-    "Blockchain",
+    "Vật liệu bán dẫn",
+    "Biến đổi khí hậu",
+    "Rừng Na Uy",
   ];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -60,47 +47,87 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({ patron }) 
       <div className="pointer-events-none absolute top-1/2 left-10 h-72 w-72 rounded-full bg-tertiary-container/5 blur-3xl" />
 
       <div className="max-w-7xl mx-auto px-space-md lg:px-margin relative">
-        {/* Patron Authenticated Status Banner */}
-        <div className="mb-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30">
-          <div className="flex items-center gap-space-md min-w-0">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
-              <span className="material-symbols-outlined text-[20px]">school</span>
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-space-xs flex-wrap">
-                <span className="font-title-sm text-title-sm text-primary font-bold">
-                  Chào buổi sáng, {patronData.name}
-                </span>
-                <span className="rounded-full bg-surface-container-high px-space-xs py-0.5 font-label-sm text-label-sm text-on-surface-variant font-semibold">
-                  {patronData.role}
-                </span>
+        {/* Patron Status Banner: Distinct 3 states */}
+        {authStatus === "loading" ? (
+          <div className="mb-space-lg bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30 flex items-center justify-between animate-pulse">
+            <div className="flex items-center gap-space-md">
+              <div className="w-10 h-10 rounded-lg bg-surface-container-high/60" />
+              <div className="space-y-1.5">
+                <div className="w-40 h-4 rounded bg-surface-container-high/60" />
+                <div className="w-56 h-3 rounded bg-surface-container-high/40" />
               </div>
-              <p className="font-body-sm text-body-sm text-on-surface-variant truncate">
-                Mã độc giả: <span className="font-semibold text-on-surface">{patronData.code}</span> |{" "}
-                {patronData.department}
-              </p>
+            </div>
+            <div className="w-24 h-6 rounded bg-surface-container-high/40" />
+          </div>
+        ) : authStatus === "authenticated" && user ? (
+          <div className="mb-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30">
+            <div className="flex items-center gap-space-md min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-on-primary">
+                <span className="material-symbols-outlined text-[20px]">school</span>
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-space-xs flex-wrap">
+                  <span className="font-title-sm text-title-sm text-primary font-bold">
+                    Xin chào, {user.name}
+                  </span>
+                  <span className="rounded-full bg-surface-container-high px-space-xs py-0.5 font-label-sm text-label-sm text-on-surface-variant font-semibold">
+                    {user.role === "STUDENT" ? "Độc giả Sinh viên" : user.role}
+                  </span>
+                </div>
+                <p className="font-body-sm text-body-sm text-on-surface-variant truncate">
+                  Mã số độc giả / MSSV: <span className="font-semibold text-on-surface font-mono">{user.code}</span> | {user.email}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-space-md">
+              <div className="flex items-center gap-space-xs rounded-lg bg-[#DCFCE7] px-space-md py-1.5 text-[#166534] font-semibold text-xs border border-green-300">
+                <span className="w-2 h-2 rounded-full bg-[#16A34A] animate-pulse"></span>
+                <span className="font-title-sm text-title-sm">Thẻ thư viện trực tuyến kích hoạt</span>
+              </div>
+              <Link
+                href="/the-thu-vien"
+                className="flex items-center gap-space-xs text-secondary hover:underline font-title-sm text-title-sm font-semibold"
+              >
+                <span>Vào trang cá nhân</span>
+                <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </Link>
             </div>
           </div>
-
-          <div className="flex items-center gap-space-md">
-            <div className="flex items-center gap-space-xs rounded-lg bg-[#DCFCE7] px-space-md py-1.5 text-[#166534] font-semibold text-xs border border-green-300">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#16A34A] opacity-75"></span>
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#16A34A]"></span>
-              </span>
-              <span className="font-title-sm text-title-sm">SSO Proxy Đã kết nối</span>
+        ) : (
+          <div className="mb-space-lg flex flex-wrap items-center justify-between gap-space-sm bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-outline-variant/30">
+            <div className="flex items-center gap-space-md min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-secondary/10 text-secondary">
+                <span className="material-symbols-outlined text-[20px]">menu_book</span>
+              </div>
+              <div>
+                <p className="font-title-sm text-title-sm text-primary font-bold">
+                  Hệ thống Mượn Trả & Đặt Sách Trực Tuyến UniLibrary
+                </p>
+                <p className="font-body-sm text-xs text-on-surface-variant">
+                  Đăng nhập tài khoản bạn đọc để mượn sách, gia hạn và sử dụng đầy đủ tiện ích thư viện.
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-space-xs text-on-surface-variant font-body-sm text-body-sm">
-              <span className="material-symbols-outlined text-[18px] text-secondary">book</span>
-              <span>
-                Đang mượn: <strong className="text-primary">{patronData.activeLoans}</strong>/
-                {patronData.maxLoans} cuốn
-              </span>
+
+            <div className="flex items-center gap-space-xs">
+              <Link
+                href="/login"
+                className="px-space-md py-1.5 rounded-xl text-title-sm font-semibold text-primary hover:bg-surface-container transition-colors"
+              >
+                Đăng nhập
+              </Link>
+              <Link
+                href="/register"
+                className="px-space-md py-1.5 rounded-xl text-title-sm font-semibold bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-xs"
+              >
+                Đăng ký thẻ mới
+              </Link>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Hero Headline & Scholarly Positioning */}
+        {/* Hero Headline & Positioning */}
         <div className="max-w-3xl mb-space-lg text-left">
           <div className="inline-flex items-center gap-space-xs rounded-full bg-surface-container-high px-space-md py-1 text-primary mb-space-sm">
             <span className="material-symbols-outlined text-[16px] text-secondary">local_library</span>
@@ -109,11 +136,10 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({ patron }) 
             </span>
           </div>
           <h1 className="font-headline-display text-headline-display text-primary tracking-tight mb-space-sm font-semibold">
-            Cổng Tri Thức & Tài Nguyên Nghiên Cứu Đại Học UniLibrary
+            Cổng Tri Thức & Tra Cứu Sách Thư Viện Đại Học
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
-            Khám phá hơn 1.200.000 đầu sách in, luận văn tiến sĩ, tạp chí Scopus/ISI và nguồn tài nguyên mở
-            chất lượng cao phục vụ đào tạo và nghiên cứu chuẩn quốc tế.
+            Tra cứu toàn bộ danh mục tài liệu, giáo trình chuyên ngành, kiểm tra tình trạng sách còn/hết và đăng ký mượn hoặc đặt trước trực tuyến.
           </p>
         </div>
 
@@ -122,16 +148,16 @@ export const HeroSearchSection: React.FC<HeroSearchSectionProps> = ({ patron }) 
           {/* Scope Segmented Controls */}
           <div className="flex items-center gap-space-xs overflow-x-auto pb-space-sm mb-space-sm">
             {[
-              { key: "all", label: "Tất cả tài nguyên" },
-              { key: "books", label: "Sách in & Giáo trình" },
-              { key: "journals", label: "Bài báo & Tạp chí khoa học" },
-              { key: "theses", label: "Luận văn - Luận án" },
-              { key: "databases", label: "Cơ sở dữ liệu số" },
+              { key: "all", label: "Tất cả tài liệu" },
+              { key: "cong_nghe", label: "Công nghệ & Máy tính" },
+              { key: "kinh_te", label: "Kinh tế & Quản trị" },
+              { key: "khoa_hoc", label: "Khoa học & Môi trường" },
+              { key: "van_hoc", label: "Văn học & Nghệ thuật" },
             ].map((tab) => (
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setActiveScope(tab.key as SearchScope)}
+                onClick={() => setActiveScope(tab.key)}
                 className={`px-space-md py-space-xs rounded-lg font-title-sm text-title-sm whitespace-nowrap transition-colors ${
                   activeScope === tab.key
                     ? "bg-primary text-on-primary font-bold shadow-sm"

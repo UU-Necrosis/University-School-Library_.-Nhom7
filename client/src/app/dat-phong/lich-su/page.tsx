@@ -137,14 +137,16 @@ export default function BookingHistoryPage() {
             <div className="flex items-center gap-space-xs overflow-x-auto pt-space-xs border-b border-outline-variant/30">
               <Link
                 href="/dat-phong"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Không gian & Tiện ích khả dụng
+                <span className="material-symbols-outlined text-[18px]">meeting_room</span>
+                <span>Không gian & Tiện ích khả dụng</span>
               </Link>
               <Link
                 href="/dat-phong/lich-su"
-                className="px-space-md py-2 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/60 rounded-t-lg flex items-center gap-1.5"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/80 rounded-t-xl flex items-center gap-1.5 shadow-xs"
               >
+                <span className="material-symbols-outlined text-[18px]">history</span>
                 <span>Lịch sử đặt phòng</span>
                 <span className="px-1.5 py-0.5 text-xs font-semibold bg-secondary/10 text-secondary rounded-full">
                   {bookings.length}
@@ -157,7 +159,7 @@ export default function BookingHistoryPage() {
         {/* Toast Notification */}
         {toastMessage && (
           <div className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-md">
-            <div className="p-space-md bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
+            <div className="p-space-md bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-2xl flex items-center justify-between shadow-sm animate-fade-in">
               <div className="flex items-center gap-space-xs font-title-sm text-title-sm">
                 <span className="material-symbols-outlined text-[#16A34A] text-[22px]">check_circle</span>
                 <span>{toastMessage}</span>

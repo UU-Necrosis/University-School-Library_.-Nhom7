@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumb, Badge, Button } from "@/components/ui";
 import { LoanHistoryItem } from "@/types/library";
+import { PatronGuard } from "@/components/layout/PatronGuard";
 
 const mockLoanHistory: LoanHistoryItem[] = [
   {
@@ -95,11 +96,12 @@ const mockLoanHistory: LoanHistoryItem[] = [
 ];
 
 export default function LoanHistoryPage() {
+  const [history] = useState<LoanHistoryItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [timeFilter, setTimeFilter] = useState("all");
 
-  const filteredHistory = mockLoanHistory.filter((item) => {
+  const filteredHistory = history.filter((item) => {
     const matchSearch =
       item.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -111,16 +113,17 @@ export default function LoanHistoryPage() {
     return matchSearch && matchStatus && matchTime;
   });
 
-  const totalLoans = mockLoanHistory.length;
-  const onTimeLoans = mockLoanHistory.filter((i) => i.status === "Đúng hạn").length;
-  const onTimeRate = ((onTimeLoans / totalLoans) * 100).toFixed(1);
-  const totalFinesPaid = mockLoanHistory.reduce((acc, curr) => acc + (curr.fineAmount || 0), 0);
+  const totalLoans = history.length;
+  const onTimeLoans = history.filter((i) => i.status === "Đúng hạn").length;
+  const onTimeRate = totalLoans > 0 ? ((onTimeLoans / totalLoans) * 100).toFixed(1) : "100";
+  const totalFinesPaid = history.reduce((acc, curr) => acc + (curr.fineAmount || 0), 0);
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
       <Header />
 
       <main className="w-full pt-32 flex-1 pb-space-xl">
+        <PatronGuard pageTitle="Lịch Sử Mượn Trả Tài Liệu">
         {/* Banner & Breadcrumb */}
         <section className="bg-surface-container-low border-b border-outline-variant/30 py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
@@ -145,26 +148,30 @@ export default function LoanHistoryPage() {
             <div className="flex items-center gap-space-xs overflow-x-auto pt-space-xs border-b border-outline-variant/30">
               <Link
                 href="/the-thu-vien"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Sách đang mượn & Thẻ ID
+                <span className="material-symbols-outlined text-[18px]">badge</span>
+                <span>Sách đang mượn & Thẻ ID</span>
               </Link>
               <Link
                 href="/the-thu-vien/lich-su"
-                className="px-space-md py-2 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/60 rounded-t-lg"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/80 rounded-t-xl flex items-center gap-1.5 shadow-xs"
               >
-                Lịch sử mượn trả
+                <span className="material-symbols-outlined text-[18px]">history</span>
+                <span>Lịch sử mượn trả</span>
               </Link>
               <Link
                 href="/the-thu-vien/dat-truoc"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Sách đặt trước (2)
+                <span className="material-symbols-outlined text-[18px]">event_seat</span>
+                <span>Sách đặt trước (2)</span>
               </Link>
               <Link
                 href="/the-thu-vien/phi-phat"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
+                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
                 <span>Phí phạt & Khoản nợ</span>
                 <span className="px-1.5 py-0.5 text-xs font-semibold bg-[#FEE2E2] text-[#DC2626] rounded-full">
                   2
@@ -177,7 +184,7 @@ export default function LoanHistoryPage() {
         {/* Stats Row */}
         <section className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-lg">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-space-md">
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-label-md text-label-md text-on-surface-variant">Tổng lượt mượn</span>
                 <span className="material-symbols-outlined text-primary text-[20px]">auto_stories</span>
@@ -186,7 +193,7 @@ export default function LoanHistoryPage() {
               <span className="text-[11px] text-on-surface-variant font-mono">Tích lũy từ 2025</span>
             </div>
 
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-label-md text-label-md text-on-surface-variant">Tỉ lệ đúng hạn</span>
                 <span className="material-symbols-outlined text-[#16A34A] text-[20px]">verified</span>
@@ -195,7 +202,7 @@ export default function LoanHistoryPage() {
               <span className="text-[11px] text-[#16A34A] font-medium">Bạn đọc gương mẫu</span>
             </div>
 
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-label-md text-label-md text-on-surface-variant">Đã hoàn trả</span>
                 <span className="material-symbols-outlined text-secondary text-[20px]">task_alt</span>
@@ -204,7 +211,7 @@ export default function LoanHistoryPage() {
               <span className="text-[11px] text-on-surface-variant">100% hồ sơ hoàn tất</span>
             </div>
 
-            <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm">
+            <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm">
               <div className="flex items-center justify-between">
                 <span className="font-label-md text-label-md text-on-surface-variant">Phí phạt đã thanh toán</span>
                 <span className="material-symbols-outlined text-outline text-[20px]">receipt_long</span>
@@ -220,7 +227,7 @@ export default function LoanHistoryPage() {
         {/* Filters & Table Section */}
         <section className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-lg space-y-space-md">
           {/* Filter Toolbar */}
-          <div className="bg-surface-container-lowest p-space-md rounded-xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm">
+          <div className="bg-surface-container-lowest p-space-md rounded-2xl border border-outline-variant/40 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-space-sm">
             <div className="relative flex-1 flex items-center">
               <span className="material-symbols-outlined absolute left-3 text-on-surface-variant text-[20px]">search</span>
               <input
@@ -228,12 +235,12 @@ export default function LoanHistoryPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Tìm theo tên sách, mã phiếu (HIST-...), mã barcode..."
-                className="w-full h-10 pl-10 pr-4 font-body-md text-body-md bg-surface-container-low rounded-lg border border-outline-variant/30 focus:outline-none focus:border-secondary"
+                className="w-full h-11 pl-10 pr-4 font-body-md text-body-md bg-surface-container-low rounded-xl border border-outline-variant/30 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-3 text-outline hover:text-on-surface"
+                  className="absolute right-3 text-outline hover:text-on-surface p-1"
                 >
                   <span className="material-symbols-outlined text-[16px]">close</span>
                 </button>
@@ -244,7 +251,7 @@ export default function LoanHistoryPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 px-3 bg-surface-container-low font-title-sm text-title-sm text-primary rounded-lg border border-outline-variant/30 focus:outline-none cursor-pointer"
+                className="h-11 px-3 bg-surface-container-low font-title-sm text-title-sm text-primary rounded-xl border border-outline-variant/30 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 cursor-pointer"
               >
                 <option value="all">Tất cả tình trạng</option>
                 <option value="Đúng hạn">Trả đúng hạn</option>
@@ -254,7 +261,7 @@ export default function LoanHistoryPage() {
               <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
-                className="h-10 px-3 bg-surface-container-low font-title-sm text-title-sm text-primary rounded-lg border border-outline-variant/30 focus:outline-none cursor-pointer"
+                className="h-11 px-3 bg-surface-container-low font-title-sm text-title-sm text-primary rounded-xl border border-outline-variant/30 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 cursor-pointer"
               >
                 <option value="all">Tất cả thời gian</option>
                 <option value="2026">Năm 2026</option>
@@ -264,7 +271,7 @@ export default function LoanHistoryPage() {
           </div>
 
           {/* Loan History Table */}
-          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/40 overflow-hidden shadow-sm">
+          <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/40 overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-body-sm text-body-sm">
                 <thead>
@@ -358,6 +365,7 @@ export default function LoanHistoryPage() {
             </div>
           </div>
         </section>
+        </PatronGuard>
       </main>
 
       <Footer />

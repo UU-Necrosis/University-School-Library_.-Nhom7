@@ -4,10 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Badge } from "@/components/ui";
-import { Account } from "@/types/library";
+import { loginApi } from "@/services/auth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,14 +23,13 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
 
-  const [isSsoModalOpen, setIsSsoModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  function handleLogin(e: React.FormEvent<HTMLFormElement>) {
+  async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
-    const normalizedInput = email.trim().toLowerCase();
+    const normalizedInput = email.trim();
 
     if (!normalizedInput || !password) {
       setError("Vui lòng nhập đầy đủ Email/Mã sinh viên và Mật khẩu.");
@@ -38,75 +39,19 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 1. Lấy danh sách tài khoản đã lưu từ localStorage
-      const accounts: Account[] = JSON.parse(
-        localStorage.getItem("unilibrary_accounts") || "[]"
-      );
+      const res = await loginApi({
+        identifier: normalizedInput,
+        password,
+      });
 
-      // Nếu danh sách rỗng (lần đầu truy cập), hỗ trợ tài khoản demo mặc định của Thư viện
-      const demoAccounts: Account[] = [
-        {
-          name: "Nguyễn Văn An",
-          code: "UL-202488",
-          email: "an.nguyen@university.edu.vn",
-          password: "Password123!",
-        },
-      ];
+      login(res.data.user, res.data.accessToken, remember);
 
-      const allAccounts = accounts.length > 0 ? accounts : demoAccounts;
-
-      // 2. Tìm tài khoản khớp email hoặc mã sinh viên
-      const account = allAccounts.find(
-        (item) =>
-          (item.email.trim().toLowerCase() === normalizedInput ||
-            item.code.trim().toLowerCase() === normalizedInput) &&
-          item.password === password
-      );
-
-      if (!account) {
-        // Cho phép đăng nhập demo nếu nhập đúng định dạng email sinh viên cho trải nghiệm mượt mà
-        if (normalizedInput.includes("@") && password.length >= 6) {
-          const defaultUser = {
-            name: "Độc giả UniLibrary",
-            code: "UL-202699",
-            email: normalizedInput,
-          };
-          const storage = remember ? localStorage : sessionStorage;
-          localStorage.removeItem("unilibrary_user");
-          sessionStorage.removeItem("unilibrary_user");
-          storage.setItem("unilibrary_user", JSON.stringify(defaultUser));
-
-          setTimeout(() => {
-            router.push("/");
-          }, 600);
-          return;
-        }
-
-        setError("Email/Mã độc giả hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.");
-        setLoading(false);
-        return;
-      }
-
-      // 3. Lưu thông tin phiên đăng nhập
-      const user = {
-        name: account.name,
-        code: account.code,
-        email: account.email,
-      };
-
-      localStorage.removeItem("unilibrary_user");
-      sessionStorage.removeItem("unilibrary_user");
-
-      const storage = remember ? localStorage : sessionStorage;
-      storage.setItem("unilibrary_user", JSON.stringify(user));
-
-      // 4. Chuyển hướng về trang chủ
       setTimeout(() => {
         router.push("/");
-      }, 500);
-    } catch (err) {
+      }, 150);
+    } catch (err: any) {
       console.error("Lỗi đăng nhập:", err);
-      setError("Không thể xử lý phiên đăng nhập. Vui lòng thử lại.");
+      setError(err?.message || "Email/Mã độc giả hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.");
       setLoading(false);
     }
   }
@@ -126,9 +71,6 @@ export default function LoginPage() {
     }, 800);
   };
 
-  const handleSsoDemoLogin = () => {
-    setIsSsoModalOpen(true);
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
@@ -252,7 +194,7 @@ export default function LoginPage() {
             {/* Bottom Institutional Seal */}
             <div className="relative z-10 pt-6 mt-6 border-t border-white/15 flex items-center justify-between text-[11px] text-blue-200">
               <span>Đại học Quốc gia</span>
-              <span className="font-mono">VNU EduID Verified</span>
+              <span className="font-mono">UniLibrary Portal</span>
             </div>
           </div>
 
@@ -268,29 +210,8 @@ export default function LoginPage() {
                   Đăng nhập Hệ thống
                 </h1>
                 <p className="text-xs sm:text-sm text-on-surface-variant mt-1">
-                  Sử dụng tài khoản thư viện số hoặc mã số sinh viên/học viên ĐHQG.
+                  Sử dụng tài khoản thư viện số hoặc mã số sinh viên/học viên.
                 </p>
-              </div>
-
-              {/* VNU SSO Quick Action */}
-              <div className="mb-6">
-                <button
-                  type="button"
-                  onClick={handleSsoDemoLogin}
-                  className="w-full h-11 px-4 rounded-xl border border-outline-variant/60 hover:border-secondary bg-surface-container-low hover:bg-secondary/5 text-primary text-xs sm:text-sm font-semibold flex items-center justify-center gap-2.5 transition-all shadow-xs group"
-                >
-                  <div className="w-6 h-6 rounded bg-primary text-white text-[10px] font-bold flex items-center justify-center group-hover:bg-secondary transition-colors">
-                    VNU
-                  </div>
-                  <span>Đăng nhập với VNU SSO (EduID ĐHQG)</span>
-                </button>
-
-                <div className="relative my-5">
-                  <div className="border-t border-outline-variant/30" />
-                  <span className="absolute left-1/2 -translate-x-1/2 -top-2.5 bg-surface-container-lowest px-3 text-[11px] font-medium text-on-surface-variant uppercase tracking-wider">
-                    Hoặc dùng tài khoản thư viện
-                  </span>
-                </div>
               </div>
 
               {/* Main Login Form */}
@@ -503,52 +424,6 @@ export default function LoginPage() {
                 </Button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: VNU SSO Thông báo mô phỏng */}
-      {isSsoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-surface-container-lowest max-w-md w-full rounded-2xl border border-outline-variant/40 shadow-2xl p-6 space-y-4 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center mx-auto">
-              <span className="material-symbols-outlined text-[28px]">hub</span>
-            </div>
-
-            <div>
-              <h3 className="font-title-lg text-title-lg text-primary font-bold">
-                Xác Thực VNU SSO (EduID)
-              </h3>
-              <p className="text-xs text-on-surface-variant mt-1.5 leading-relaxed">
-                Cổng đăng nhập tập trung Single Sign-On của Đại học Quốc gia hiện đang ở chế độ giao diện mô phỏng (Frontend Demo) trước khi kết nối hệ thống Identity Provider thực tế.
-              </p>
-            </div>
-
-            <div className="p-3 bg-surface-container-low rounded-xl text-xs text-left space-y-1 border border-outline-variant/30">
-              <div className="flex justify-between font-mono text-[11px]">
-                <span className="text-on-surface-variant">SSO Gateway:</span>
-                <span className="font-semibold text-primary">sso.vnu.edu.vn</span>
-              </div>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span className="text-on-surface-variant">Protocol:</span>
-                <span className="text-secondary font-semibold">OpenID Connect / SAML2</span>
-              </div>
-              <div className="flex justify-between font-mono text-[11px]">
-                <span className="text-on-surface-variant">Trạng thái:</span>
-                <span className="text-amber-600 font-semibold">Chờ kết nối Backend API</span>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2 border-t border-outline-variant/30">
-              <Button
-                variant="primary"
-                size="sm"
-                fullWidth
-                onClick={() => setIsSsoModalOpen(false)}
-              >
-                Đã hiểu & Quay lại form đăng nhập
-              </Button>
-            </div>
           </div>
         </div>
       )}

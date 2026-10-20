@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
   title: "UniLibrary - Cổng Tri Thức & Tài Nguyên Nghiên Cứu Đại Học",
-  description: "Hệ thống Thư viện số & Trung tâm Học liệu Đại học Quốc gia. Khám phá hơn 1.200.000 đầu sách in, luận văn tiến sĩ, tạp chí Scopus/ISI và cơ sở dữ liệu số.",
-  keywords: "UniLibrary, Thư viện đại học, Cổng tri thức, Scopus, IEEE Xplore, Luận văn tiến sĩ, Sách in",
+  description: "Hệ thống Thư viện số & Trung tâm Học liệu Đại học Quốc gia. Khám phá các nguồn tài liệu học thuật chất lượng cao phục vụ đào tạo và nghiên cứu chuẩn quốc tế.",
+  keywords: "UniLibrary, Thư viện đại học, Cổng tri thức, Nghiên cứu, Luận văn, Sách in, Mượn sách trực tuyến",
 };
 
 export default function RootLayout({
@@ -23,7 +24,9 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background font-body-md text-on-surface antialiased">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

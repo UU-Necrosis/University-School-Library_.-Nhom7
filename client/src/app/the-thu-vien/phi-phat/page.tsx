@@ -6,6 +6,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumb, Badge, Button } from "@/components/ui";
 import { FineItem, PaymentItem } from "@/types/library";
+import { PatronGuard } from "@/components/layout/PatronGuard";
 
 const initialFines: FineItem[] = [
   {
@@ -99,8 +100,8 @@ const initialPayments: PaymentItem[] = [
 ];
 
 export default function FinesPage() {
-  const [fines, setFines] = useState<FineItem[]>(initialFines);
-  const [payments, setPayments] = useState<PaymentItem[]>(initialPayments);
+  const [fines, setFines] = useState<FineItem[]>([]);
+  const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -189,6 +190,7 @@ export default function FinesPage() {
       <Header />
 
       <main className="w-full pt-32 flex-1 pb-space-xl">
+        <PatronGuard pageTitle="Phí Phạt & Khoản Nợ">
         {/* Banner & Breadcrumb */}
         <section className="bg-surface-container-low border-b border-outline-variant/30 py-space-xl px-space-md lg:px-margin">
           <div className="max-w-7xl mx-auto flex flex-col gap-space-md">
@@ -213,26 +215,30 @@ export default function FinesPage() {
             <div className="flex items-center gap-space-xs overflow-x-auto pt-space-xs border-b border-outline-variant/30">
               <Link
                 href="/the-thu-vien"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Sách đang mượn & Thẻ ID
+                <span className="material-symbols-outlined text-[18px]">badge</span>
+                <span>Sách đang mượn & Thẻ ID</span>
               </Link>
               <Link
                 href="/the-thu-vien/lich-su"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Lịch sử mượn trả
+                <span className="material-symbols-outlined text-[18px]">history</span>
+                <span>Lịch sử mượn trả</span>
               </Link>
               <Link
                 href="/the-thu-vien/dat-truoc"
-                className="px-space-md py-2 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-on-surface-variant hover:text-primary transition-colors border-b-2 border-transparent flex items-center gap-1.5"
               >
-                Sách đặt trước (2)
+                <span className="material-symbols-outlined text-[18px]">event_seat</span>
+                <span>Sách đặt trước (2)</span>
               </Link>
               <Link
                 href="/the-thu-vien/phi-phat"
-                className="px-space-md py-2 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/60 rounded-t-lg flex items-center gap-1.5"
+                className="px-space-md py-2.5 font-title-sm text-title-sm text-secondary font-bold border-b-2 border-secondary bg-surface-container-lowest/80 rounded-t-xl flex items-center gap-1.5 shadow-xs"
               >
+                <span className="material-symbols-outlined text-[18px]">account_balance_wallet</span>
                 <span>Phí phạt & Khoản nợ</span>
                 {unpaidFines.length > 0 && (
                   <span className="px-1.5 py-0.5 text-xs font-semibold bg-[#FEE2E2] text-[#DC2626] rounded-full">
@@ -247,7 +253,7 @@ export default function FinesPage() {
         {/* Toast Notification */}
         {toastMessage && (
           <div className="max-w-7xl mx-auto px-space-md lg:px-margin mt-space-md">
-            <div className="p-space-md bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-xl flex items-center justify-between shadow-sm animate-fade-in">
+            <div className="p-space-md bg-[#DCFCE7] border border-[#BBF7D0] text-[#166534] rounded-2xl flex items-center justify-between shadow-sm animate-fade-in">
               <div className="flex items-center gap-space-xs font-title-sm text-title-sm">
                 <span className="material-symbols-outlined text-[#16A34A] text-[22px]">check_circle</span>
                 <span>{toastMessage}</span>
@@ -678,6 +684,7 @@ export default function FinesPage() {
             </div>
           </div>
         </section>
+        </PatronGuard>
       </main>
 
       <Footer />

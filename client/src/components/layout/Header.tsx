@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PatronInfo } from "@/types/library";
+import { CATEGORIES, getSavedBookIds } from "@/data/catalog";
+import { useAuth } from "@/context/AuthContext";
 
 interface HeaderProps {
   patron?: PatronInfo;
@@ -12,39 +14,65 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ patron }) => {
   const pathname = usePathname();
   const router = useRouter();
+  const { authStatus, user, logout } = useAuth();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(true);
   const [currentLang, setCurrentLang] = useState<"VN" | "EN">("VN");
-  const [user, setUser] = useState<{ name: string; code: string; email: string } | null>(null);
   const [quickSearch, setQuickSearch] = useState("");
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("unilibrary_user") || sessionStorage.getItem("unilibrary_user");
-      if (stored) {
-        setUser(JSON.parse(stored));
-      }
+      setSavedCount(getSavedBookIds().length);
     } catch {
-      // ignore
+      setSavedCount(0);
     }
-  }, []);
 
-  useEffect(() => {
+    const handleSavedChange = () => {
+      try {
+        setSavedCount(getSavedBookIds().length);
+      } catch {
+        setSavedCount(0);
+      }
+    };
+    window.addEventListener("unilibrary_saved_changed", handleSavedChange);
+
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setProfileDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("unilibrary_saved_changed", handleSavedChange);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+    setProfileDropdownOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDrawerOpen(false);
+        setProfileDropdownOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("unilibrary_user");
-    sessionStorage.removeItem("unilibrary_user");
-    setUser(null);
-    window.location.href = "/";
+    logout();
+    setProfileDropdownOpen(false);
+    router.push("/login");
   };
 
   const handleQuickSearch = (e: React.FormEvent) => {
@@ -54,18 +82,15 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
     }
   };
 
-  const displayName = user?.name || patron?.name || "Lê Hoàng Nam";
-  const displayCode = user?.code || patron?.code || "UL-202488";
-  const isLoggedIn = Boolean(user || patron);
+  const isLoggedIn = authStatus === "authenticated" && Boolean(user);
+  const displayName = user?.name || "";
+  const displayCode = user?.code || "";
 
-  const navLinks = [
-    { label: "Trang chủ", href: "/", icon: "home" },
-    { label: "Tra cứu & Danh mục", href: "/tra-cuu", icon: "search" },
-    { label: "Cơ sở dữ liệu số", href: "/co-so-du-lieu", icon: "database" },
-    { label: "Đặt phòng & Tiện ích", href: "/dat-phong", icon: "meeting_room" },
-    { label: "Dịch vụ Nghiên cứu", href: "/dich-vu", icon: "handshake" },
-    { label: "Hướng dẫn & Quy định", href: "/huong-dan", icon: "gavel" },
-  ];
+  const isCategoryActive = pathname.startsWith("/danh-muc");
+  const isAuthorActive = pathname.startsWith("/tac-gia");
+  const isReserveActive = pathname.startsWith("/dat-sach");
+  const isGuideActive = pathname.startsWith("/huong-dan");
+  const isRulesActive = pathname.startsWith("/quy-dinh");
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
@@ -83,10 +108,10 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
             </div>
           </div>
           <div className="flex items-center gap-space-md">
-            <a href="#faculty" className="hover:underline text-on-primary">
-              Cổng Cán bộ & Giảng viên
-            </a>
-            <span className="text-outline-variant/40">|</span>
+            <Link href="/huong-dan" className="hover:underline text-on-primary hidden sm:inline">
+              Cổng Hướng dẫn & Dịch vụ
+            </Link>
+            <span className="text-outline-variant/40 hidden sm:inline">|</span>
             <div className="flex items-center gap-space-xs">
               <span className="material-symbols-outlined text-[14px]">language</span>
               <button
@@ -111,16 +136,17 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
         </div>
       </div>
 
-      {/* Main Header Row: Hamburger Drawer Button + Logo + Google-style Search Bar + User Utilities */}
+      {/* Main Header Row: Left Menu Drawer Button + Brand Logo + Search + Profile Avatar */}
       <div className="border-b border-surface-container/60 bg-surface-container-lowest">
         <div className="max-w-7xl mx-auto px-space-md lg:px-margin py-2.5 flex items-center justify-between gap-space-md">
           {/* Left: Drawer Toggle Button & Brand Logo */}
           <div className="flex items-center gap-space-xs shrink-0">
             <button
               onClick={() => setDrawerOpen(!drawerOpen)}
-              className="flex items-center justify-center p-2 rounded-lg text-primary hover:text-secondary hover:bg-surface-container transition-all cursor-pointer"
+              className="flex items-center justify-center p-2 rounded-xl text-primary hover:text-secondary hover:bg-surface-container transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-secondary focus-visible:outline-none"
               type="button"
-              aria-label="Menu điều hướng"
+              aria-label="Mở menu danh mục bên trái"
+              aria-expanded={drawerOpen}
             >
               <span className="material-symbols-outlined text-[24px]">
                 {drawerOpen ? "close" : "menu"}
@@ -142,11 +168,11 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
             </Link>
           </div>
 
-          {/* Center: Google-style rounded-full search bar */}
+          {/* Center: Search Bar */}
           <div className="flex-1 max-w-2xl mx-space-md hidden sm:block">
             <form
               onSubmit={handleQuickSearch}
-              className="relative flex items-center w-full shadow-sm hover:shadow-md transition-shadow rounded-full border border-surface-container-high bg-surface-container-low/70 hover:bg-surface-container-lowest focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-secondary/30 focus-within:border-secondary transition-all"
+              className="relative flex items-center w-full shadow-xs hover:shadow-sm transition-shadow rounded-full border border-surface-container-high bg-surface-container-low/70 hover:bg-surface-container-lowest focus-within:bg-surface-container-lowest focus-within:ring-2 focus-within:ring-secondary/30 focus-within:border-secondary transition-all"
             >
               <span className="material-symbols-outlined text-on-surface-variant text-[20px] pl-4 pr-2 select-none">
                 search
@@ -155,16 +181,9 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
                 value={quickSearch}
                 onChange={(e) => setQuickSearch(e.target.value)}
                 className="w-full bg-transparent py-2.5 pr-4 text-on-surface text-body-md placeholder:text-on-surface-variant/70 focus:outline-none"
-                placeholder="Tìm kiếm tài liệu, sách, ISBN, DOI..."
+                placeholder="Tìm nhan đề sách, tác giả, ký hiệu DDC, ISBN..."
                 type="text"
               />
-              <button
-                className="mr-2 text-on-surface-variant hover:text-primary p-1.5 rounded-full hover:bg-surface-container transition-colors"
-                title="Tìm bằng giọng nói"
-                type="button"
-              >
-                <span className="material-symbols-outlined text-[18px]">mic</span>
-              </button>
               <button
                 className="bg-secondary hover:bg-primary text-on-secondary text-title-sm font-semibold px-4 py-1.5 rounded-full mr-1.5 transition-colors whitespace-nowrap"
                 type="submit"
@@ -174,39 +193,63 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
             </form>
           </div>
 
-          {/* Right: Thẻ thư viện số + Patron Profile Card */}
+          {/* Right: Quick Links & Avatar Profile Dropdown */}
           <div className="flex items-center gap-space-md shrink-0">
+            {/* Bookmark button representing "Sách đã lưu" */}
             <Link
-              href="/the-thu-vien"
-              className="hidden md:inline-flex items-center gap-space-xs bg-surface-container-low hover:bg-surface-container text-primary font-title-sm text-title-sm px-space-md py-space-sm rounded-lg border border-surface-container-high/60 transition-colors"
+              href="/the-thu-vien/da-luu"
+              aria-label="Sách đã lưu"
+              title="Sách đã lưu"
+              className="relative flex items-center justify-center w-10 h-10 rounded-xl text-primary hover:text-secondary bg-surface-container-low hover:bg-surface-container border border-surface-container-high transition-colors focus-visible:ring-2 focus-visible:ring-secondary focus-visible:outline-none shrink-0"
             >
-              <span className="material-symbols-outlined text-[18px] text-secondary">badge</span>
-              <span>Thẻ thư viện số</span>
+              <span className="material-symbols-outlined text-[22px]">bookmark</span>
+              {savedCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-secondary text-on-secondary text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                  {savedCount}
+                </span>
+              )}
             </Link>
 
-            {isLoggedIn ? (
-              <div ref={dropdownRef} className="relative">
-                <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  aria-label="Tài khoản độc giả"
-                  className="cursor-pointer flex items-center gap-space-sm pl-space-sm border-l border-surface-container-high py-1 focus:outline-none"
+            {authStatus === "loading" ? (
+              <div className="flex items-center gap-2 pl-space-sm border-l border-surface-container-high">
+                <div className="w-20 h-8 rounded-xl bg-surface-container-high/40 animate-pulse" />
+              </div>
+            ) : isLoggedIn ? (
+              <div ref={dropdownRef} className="relative flex items-center gap-1 pl-space-sm border-l border-surface-container-high">
+                {/* 1. Click Avatar / Info to navigate directly to Account Information */}
+                <Link
+                  href="/the-thu-vien"
+                  aria-label={`Trang tài khoản của ${displayName}`}
+                  title="Thông tin tài khoản độc giả"
+                  className="flex items-center gap-space-sm py-1 rounded-lg hover:opacity-90 transition-opacity focus-visible:ring-2 focus-visible:ring-secondary focus-visible:outline-none cursor-pointer"
                 >
                   <div className="hidden md:flex flex-col text-right leading-tight select-none">
-                    <span className="font-title-sm text-title-sm text-on-surface group-hover:text-secondary transition-colors">
+                    <span className="font-title-sm text-title-sm text-on-surface font-semibold hover:text-secondary transition-colors">
                       {displayName}
                     </span>
-                    <span className="font-label-sm text-label-sm text-on-surface-variant">
+                    <span className="font-label-sm text-label-sm text-on-surface-variant font-mono">
                       {displayCode}
                     </span>
                   </div>
                   <div className="relative">
-                    <div className="w-9 h-9 rounded-full bg-primary-container text-primary-fixed flex items-center justify-center font-bold text-sm ring-2 ring-primary/20">
-                      {displayName.slice(0, 2).toUpperCase()}
+                    <div className="w-9 h-9 rounded-full bg-primary-container text-primary flex items-center justify-center font-bold text-sm ring-2 ring-primary/20">
+                      {displayName ? displayName.trim().split(" ").slice(-1)[0]?.slice(0, 2).toUpperCase() : "UL"}
                     </div>
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#16A34A] ring-2 ring-white"></span>
                   </div>
+                </Link>
+
+                {/* 2. Separate chevron arrow button to open/close popup */}
+                <button
+                  type="button"
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  aria-label="Mở menu tiện ích tài khoản"
+                  aria-expanded={profileDropdownOpen}
+                  aria-haspopup="true"
+                  className="p-1 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors focus-visible:ring-2 focus-visible:ring-secondary focus-visible:outline-none cursor-pointer"
+                >
                   <span
-                    className={`material-symbols-outlined text-[18px] text-on-surface-variant transition-transform duration-200 ${
+                    className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
                       profileDropdownOpen ? "rotate-180 text-primary" : ""
                     }`}
                   >
@@ -214,95 +257,102 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
                   </span>
                 </button>
 
-                {/* Profile Popup Dropdown Card */}
+                {/* Avatar Profile Popup Card (No repeated name or ID) */}
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 top-full pt-2 w-80 z-50">
-                    <div className="bg-surface-container-lowest rounded-xl shadow-xl border border-surface-container-high overflow-hidden text-left">
-                      <div className="p-space-md bg-gradient-to-br from-surface-container-low to-surface-container/40 border-b border-surface-container">
-                        <div className="flex items-start gap-space-sm">
-                          <div className="w-12 h-12 rounded-full bg-primary-container text-primary-fixed flex items-center justify-center font-bold text-base shrink-0 ring-2 ring-primary/20">
-                            {displayName.slice(0, 2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <h4 className="font-title-sm text-title-sm text-primary font-bold truncate">
-                                {displayName}
-                              </h4>
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[#DCFCE7] text-[#166534] px-2 py-0.5 text-[10px] font-semibold shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse"></span>
-                                RFID Hợp lệ
-                              </span>
-                            </div>
-                            <p className="font-label-sm text-label-sm text-secondary font-medium mt-0.5">
-                              Học viên Cao học • K31
-                            </p>
-                            <p className="font-body-sm text-body-sm text-on-surface-variant text-[11px] truncate">
-                              Mã: {displayCode} • ĐHQG-HCM
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-1.5 mt-space-sm pt-space-xs border-t border-surface-container-high/60 text-center">
-                          <div className="bg-surface-container-lowest/80 rounded-lg p-1.5">
-                            <span className="block font-title-sm text-title-sm font-bold text-primary">03</span>
-                            <span className="block text-[10px] leading-tight text-on-surface-variant">Đang mượn</span>
-                            <span className="block text-[9px] text-[#DC2626] font-medium leading-none mt-0.5">1 sắp hạn</span>
-                          </div>
-                          <div className="bg-surface-container-lowest/80 rounded-lg p-1.5">
-                            <span className="block font-title-sm text-title-sm font-bold text-primary">12</span>
-                            <span className="block text-[10px] leading-tight text-on-surface-variant">Đã lưu</span>
-                            <span className="block text-[9px] text-secondary font-medium leading-none mt-0.5">Tài liệu</span>
-                          </div>
-                          <div className="bg-surface-container-lowest/80 rounded-lg p-1.5">
-                            <span className="block font-title-sm text-title-sm font-bold text-primary">01</span>
-                            <span className="block text-[10px] leading-tight text-on-surface-variant">Giữ chỗ</span>
-                            <span className="block text-[9px] text-[#16A34A] font-medium leading-none mt-0.5">Chờ lấy</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="py-1.5 px-1 font-body-sm text-body-sm">
+                  <div className="absolute right-0 top-full pt-2 w-72 max-w-[90vw] z-50 animate-scale-in">
+                    <div className="bg-surface-container-lowest rounded-2xl shadow-xl border border-surface-container-high overflow-hidden text-left p-2">
+                      {/* Quick Counters: Sạch sẽ, không lặp lại avatar / tên / mã */}
+                      <div className="grid grid-cols-3 gap-1.5 p-1 bg-surface-container-low/60 rounded-xl mb-1.5 text-center">
                         <Link
                           href="/the-thu-vien"
                           onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center justify-between px-space-sm py-2 rounded-lg hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                          className="bg-surface-container-lowest hover:bg-surface-container rounded-lg p-1.5 transition-colors"
                         >
-                          <div className="flex items-center gap-space-xs">
-                            <span className="material-symbols-outlined text-[18px] text-secondary">menu_book</span>
-                            <span>Tài liệu đang mượn & Gia hạn</span>
-                          </div>
-                          <span className="rounded bg-[#FEF3C7] text-[#92400E] font-semibold text-[10px] px-1.5 py-0.5">Gia hạn</span>
+                          <span className="block font-title-sm text-title-sm font-bold text-primary">0</span>
+                          <span className="block text-[10px] leading-tight text-on-surface-variant">Đang mượn</span>
+                          <span className="block text-[9px] text-on-surface-variant font-semibold leading-none mt-0.5">Sách</span>
                         </Link>
                         <Link
-                          href="/dat-phong"
+                          href="/the-thu-vien/dat-truoc"
                           onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center justify-between px-space-sm py-2 rounded-lg hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                          className="bg-surface-container-lowest hover:bg-surface-container rounded-lg p-1.5 transition-colors"
                         >
-                          <div className="flex items-center gap-space-xs">
-                            <span className="material-symbols-outlined text-[18px] text-secondary">meeting_room</span>
-                            <span>Lịch đặt phòng & Tiện ích</span>
-                          </div>
-                          <span className="rounded bg-[#DCFCE7] text-[#166534] font-semibold text-[10px] px-1.5 py-0.5">14:00 hôm nay</span>
+                          <span className="block font-title-sm text-title-sm font-bold text-primary">0</span>
+                          <span className="block text-[10px] leading-tight text-on-surface-variant">Đặt trước</span>
+                          <span className="block text-[9px] text-[#16A34A] font-semibold leading-none mt-0.5">Yêu cầu</span>
                         </Link>
                         <Link
-                          href="/dich-vu"
+                          href="/the-thu-vien/da-luu"
                           onClick={() => setProfileDropdownOpen(false)}
-                          className="flex items-center justify-between px-space-sm py-2 rounded-lg hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                          className="bg-surface-container-lowest hover:bg-surface-container rounded-lg p-1.5 transition-colors"
                         >
-                          <div className="flex items-center gap-space-xs">
-                            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">swap_horiz</span>
-                            <span>Yêu cầu mượn liên trường (ILL)</span>
-                          </div>
+                          <span className="block font-title-sm text-title-sm font-bold text-primary">{savedCount}</span>
+                          <span className="block text-[10px] leading-tight text-on-surface-variant">Đã lưu</span>
+                          <span className="block text-[9px] text-secondary font-semibold leading-none mt-0.5">Tài liệu</span>
                         </Link>
                       </div>
 
-                      <div className="p-space-xs bg-surface-container-low/70 border-t border-surface-container">
+                      {/* Personal Navigation Items */}
+                      <div className="space-y-0.5 font-body-sm text-body-sm">
+                        <Link
+                          href="/the-thu-vien"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="material-symbols-outlined text-[18px] text-secondary">autorenew</span>
+                            <span className="font-medium text-xs">Sách đang mượn và gia hạn</span>
+                          </div>
+                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+                        </Link>
+
+                        <Link
+                          href="/the-thu-vien/dat-truoc"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="material-symbols-outlined text-[18px] text-secondary">event_seat</span>
+                            <span className="font-medium text-xs">Đặt trước của tôi</span>
+                          </div>
+                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+                        </Link>
+
+                        <Link
+                          href="/the-thu-vien/da-luu"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="material-symbols-outlined text-[18px] text-secondary">bookmark</span>
+                            <span className="font-medium text-xs">Sách đã lưu</span>
+                          </div>
+                          <span className="text-xs font-semibold text-on-surface-variant">
+                            {savedCount}
+                          </span>
+                        </Link>
+
+                        <Link
+                          href="/the-thu-vien/lich-su"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-container text-on-surface hover:text-primary transition-colors"
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="material-symbols-outlined text-[18px] text-secondary">history</span>
+                            <span className="font-medium text-xs">Lịch sử mượn trả</span>
+                          </div>
+                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+                        </Link>
+                      </div>
+
+                      {/* Logout Action */}
+                      <div className="pt-1.5 mt-1 border-t border-surface-container">
                         <button
                           onClick={handleLogout}
-                          className="flex items-center justify-center gap-space-xs w-full py-1.5 rounded-lg text-[#DC2626] hover:bg-red-50 font-title-sm text-title-sm text-xs transition-colors"
+                          className="flex items-center justify-center gap-space-xs w-full py-2 rounded-xl text-[#DC2626] hover:bg-red-50 font-title-sm text-title-sm text-xs transition-colors cursor-pointer"
                         >
                           <span className="material-symbols-outlined text-[16px]">logout</span>
-                          <span>Đăng xuất tài khoản</span>
+                          <span>Đăng xuất</span>
                         </button>
                       </div>
                     </div>
@@ -313,13 +363,13 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
               <div className="flex items-center gap-space-xs pl-space-sm border-l border-surface-container-high">
                 <Link
                   href="/login"
-                  className="px-space-md py-1.5 rounded-lg text-title-sm font-semibold text-primary hover:bg-surface-container transition-colors"
+                  className="px-space-md py-1.5 rounded-xl text-title-sm font-semibold text-primary hover:bg-surface-container transition-colors"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   href="/register"
-                  className="px-space-md py-1.5 rounded-lg text-title-sm font-semibold bg-primary text-on-primary hover:bg-primary-container transition-colors"
+                  className="px-space-md py-1.5 rounded-xl text-title-sm font-semibold bg-primary text-on-primary hover:bg-primary-container transition-colors shadow-xs"
                 >
                   Đăng ký
                 </Link>
@@ -329,44 +379,212 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
         </div>
       </div>
 
-      {/* Slide-out Hamburger Drawer Menu */}
+      {/* Slide-out Left Navigation Drawer: EXACTLY 5 ITEMS */}
       {drawerOpen && (
-        <div className="fixed inset-0 top-[108px] z-40 flex">
-          <div className="w-80 h-[calc(100vh-108px)] bg-surface-container-lowest shadow-2xl border-r border-surface-container-high py-2 text-left overflow-y-auto">
-            <div className="px-space-md py-space-sm border-b border-surface-container/60 mb-1">
-              <span className="font-label-md text-label-md uppercase tracking-wider text-secondary font-semibold">
-                Danh mục dịch vụ & tài nguyên
-              </span>
-            </div>
+        <div className="fixed inset-0 top-[88px] sm:top-[96px] z-40 flex">
+          {/* Left Panel */}
+          <div
+            ref={drawerRef}
+            className="w-80 max-w-[85vw] h-full bg-surface-container-lowest shadow-2xl border-r border-surface-container-high flex flex-col justify-between overflow-y-auto animate-slide-right"
+          >
+            <div>
+              <div className="px-space-md py-3.5 border-b border-surface-container/80 bg-surface-container-low/60 flex items-center justify-between">
+                <span className="font-label-md text-label-md uppercase tracking-wider text-secondary font-bold">
+                  Menu Điều Hướng Thư Viện
+                </span>
+                <span className="text-[11px] text-on-surface-variant font-medium">5 mục chính</span>
+              </div>
 
-            {navLinks.map((item) => {
-              const isActive = pathname === item.href;
-              return (
+              <nav className="flex flex-col py-2" aria-label="Menu chính bên trái">
+                {/* 1. Danh mục sách (Accordion xổ/thu gọn) */}
+                <div className="border-b border-surface-container/60">
+                  <div
+                    className={`flex items-center justify-between px-space-md py-3 font-title-sm text-title-sm cursor-pointer transition-colors ${
+                      isCategoryActive
+                        ? "text-secondary bg-surface-container-low font-bold border-l-4 border-l-secondary"
+                        : "text-on-surface hover:bg-surface-container-low hover:text-secondary"
+                    }`}
+                  >
+                    <Link
+                      href="/danh-muc"
+                      onClick={() => setDrawerOpen(false)}
+                      className="flex items-center gap-3 flex-1"
+                    >
+                      <span className={`material-symbols-outlined text-[20px] ${isCategoryActive ? "text-secondary" : "text-on-surface-variant"}`}>
+                        category
+                      </span>
+                      <span>1. Danh mục sách</span>
+                    </Link>
+
+                    {/* Accordion Toggle Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCategoriesExpanded(!categoriesExpanded);
+                      }}
+                      aria-expanded={categoriesExpanded}
+                      aria-label={categoriesExpanded ? "Thu gọn thể loại sách" : "Mở rộng thể loại sách"}
+                      className="p-1 rounded-lg text-on-surface-variant hover:text-primary hover:bg-surface-container transition-transform"
+                    >
+                      <span
+                        className={`material-symbols-outlined text-[20px] transition-transform duration-200 ${
+                          categoriesExpanded ? "rotate-180 text-secondary" : ""
+                        }`}
+                      >
+                        expand_more
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Sub-categories dropdown list */}
+                  {categoriesExpanded && (
+                    <div className="bg-surface-container-low/40 pl-6 pr-2 py-1.5 space-y-0.5 border-t border-surface-container/40">
+                      <Link
+                        href="/danh-muc"
+                        onClick={() => setDrawerOpen(false)}
+                        className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors ${
+                          pathname === "/danh-muc"
+                            ? "font-bold text-secondary bg-surface-container"
+                            : "text-on-surface hover:bg-surface-container hover:text-secondary"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px]">view_list</span>
+                          <span>Tất cả thể loại</span>
+                        </span>
+                        <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                      </Link>
+
+                      {CATEGORIES.map((cat) => {
+                        const isCurrentCat = pathname === `/danh-muc/${cat.slug}`;
+                        return (
+                          <Link
+                            key={cat.slug}
+                            href={`/danh-muc/${cat.slug}`}
+                            onClick={() => setDrawerOpen(false)}
+                            className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors ${
+                              isCurrentCat
+                                ? "font-bold text-secondary bg-surface-container"
+                                : "text-on-surface hover:bg-surface-container hover:text-secondary"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="material-symbols-outlined text-[16px]">{cat.icon}</span>
+                              <span>{cat.name}</span>
+                            </span>
+                            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Tác giả */}
                 <Link
-                  key={item.href}
-                  href={item.href}
+                  href="/tac-gia"
                   onClick={() => setDrawerOpen(false)}
                   className={`flex items-center justify-between px-space-md py-3 font-title-sm text-title-sm border-b border-surface-container/60 transition-colors ${
-                    isActive
-                      ? "text-secondary bg-surface-container-low font-bold"
+                    isAuthorActive
+                      ? "text-secondary bg-surface-container-low font-bold border-l-4 border-l-secondary"
                       : "text-on-surface hover:bg-surface-container-low hover:text-secondary"
                   }`}
                 >
-                  <span className="flex items-center gap-2.5">
-                    <span className="material-symbols-outlined text-[20px] text-secondary">
-                      {item.icon}
+                  <span className="flex items-center gap-3">
+                    <span className={`material-symbols-outlined text-[20px] ${isAuthorActive ? "text-secondary" : "text-on-surface-variant"}`}>
+                      groups
                     </span>
-                    {item.label}
+                    <span>2. Tác giả</span>
                   </span>
-                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">&gt;</span>
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
+                    chevron_right
+                  </span>
                 </Link>
-              );
-            })}
+
+                {/* 3. Đặt sách */}
+                <Link
+                  href="/dat-sach"
+                  onClick={() => setDrawerOpen(false)}
+                  className={`flex items-center justify-between px-space-md py-3 font-title-sm text-title-sm border-b border-surface-container/60 transition-colors ${
+                    isReserveActive
+                      ? "text-secondary bg-surface-container-low font-bold border-l-4 border-l-secondary"
+                      : "text-on-surface hover:bg-surface-container-low hover:text-secondary"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className={`material-symbols-outlined text-[20px] ${isReserveActive ? "text-secondary" : "text-on-surface-variant"}`}>
+                      bookmark_add
+                    </span>
+                    <span>3. Đặt sách</span>
+                  </span>
+                  <span className="rounded-full bg-secondary-fixed text-secondary px-2 py-0.5 text-[10px] font-bold">
+                    FIFO Hold
+                  </span>
+                </Link>
+
+                {/* 4. Hướng dẫn */}
+                <Link
+                  href="/huong-dan"
+                  onClick={() => setDrawerOpen(false)}
+                  className={`flex items-center justify-between px-space-md py-3 font-title-sm text-title-sm border-b border-surface-container/60 transition-colors ${
+                    isGuideActive
+                      ? "text-secondary bg-surface-container-low font-bold border-l-4 border-l-secondary"
+                      : "text-on-surface hover:bg-surface-container-low hover:text-secondary"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className={`material-symbols-outlined text-[20px] ${isGuideActive ? "text-secondary" : "text-on-surface-variant"}`}>
+                      help_center
+                    </span>
+                    <span>4. Hướng dẫn</span>
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
+                    chevron_right
+                  </span>
+                </Link>
+
+                {/* 5. Quy định */}
+                <Link
+                  href="/quy-dinh"
+                  onClick={() => setDrawerOpen(false)}
+                  className={`flex items-center justify-between px-space-md py-3 font-title-sm text-title-sm border-b border-surface-container/60 transition-colors ${
+                    isRulesActive
+                      ? "text-secondary bg-surface-container-low font-bold border-l-4 border-l-secondary"
+                      : "text-on-surface hover:bg-surface-container-low hover:text-secondary"
+                  }`}
+                >
+                  <span className="flex items-center gap-3">
+                    <span className={`material-symbols-outlined text-[20px] ${isRulesActive ? "text-secondary" : "text-on-surface-variant"}`}>
+                      gavel
+                    </span>
+                    <span>5. Quy định</span>
+                  </span>
+                  <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
+                    chevron_right
+                  </span>
+                </Link>
+              </nav>
+            </div>
+
+            {/* Quick Support inside Drawer Footer */}
+            <div className="p-space-md border-t border-surface-container bg-surface-container-low/50">
+              <div className="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm mb-1">
+                <span className="material-symbols-outlined text-[16px] text-secondary">support_agent</span>
+                <span>Hỗ trợ: (028) 3724 2160 (Ext 1240)</span>
+              </div>
+              <p className="font-body-sm text-[11px] text-on-surface-variant/80">
+                Trung tâm Học liệu & Thư viện UniLibrary
+              </p>
+            </div>
           </div>
+
+          {/* Backdrop Overlay */}
           <div
             onClick={() => setDrawerOpen(false)}
-            className="flex-1 bg-primary/20 backdrop-blur-sm cursor-pointer"
-          ></div>
+            className="flex-1 bg-primary/40 backdrop-blur-xs cursor-pointer transition-opacity"
+            aria-label="Đóng menu điều hướng"
+          />
         </div>
       )}
     </header>

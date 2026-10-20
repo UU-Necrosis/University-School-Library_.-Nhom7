@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, use } from "react";
+import React, { useState, useEffect, use } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Breadcrumb, Badge, Button } from "@/components/ui";
 import { BookItem } from "@/types/library";
+import { CATALOG_BOOKS, getSavedBookIds, toggleSavedBook } from "@/data/catalog";
 
 const mockDetailedBooks: Record<string, BookItem> = {
   "1": {
@@ -366,13 +367,48 @@ interface PageProps {
 export default function BookDetailPage({ params }: PageProps) {
   const resolvedParams = use(params);
   const bookId = resolvedParams.id;
-  const book = mockDetailedBooks[bookId] || mockDetailedBooks["1"];
+  const catalogItem = CATALOG_BOOKS.find((b) => b.id === bookId);
+  const book: BookItem =
+    mockDetailedBooks[bookId] ||
+    (catalogItem
+      ? {
+          ...catalogItem,
+          type: catalogItem.type || "Sách in",
+          publisher: "NXB Đại học Quốc gia TP.HCM",
+          department: catalogItem.categoryName,
+          language: "Tiếng Việt",
+          copies: [
+            {
+              barcode: `UL-${catalogItem.id}-01`,
+              campus: "Cơ sở 1 (Khuôn viên Trung tâm)",
+              location: catalogItem.location,
+              callNumber: `${catalogItem.callNumber} c.1`,
+              status: catalogItem.available ? "Có sẵn" : "Đang mượn",
+            },
+          ],
+        }
+      : mockDetailedBooks["1"]);
 
   const [activeTab, setActiveTab] = useState<"copies" | "toc" | "cite">("copies");
   const [borrowModalOpen, setBorrowModalOpen] = useState(false);
   const [reserveModalOpen, setReserveModalOpen] = useState(false);
   const [successToast, setSuccessToast] = useState<string | null>(null);
   const [isBookmarked, setIsBookmarked] = useState(false);
+
+  useEffect(() => {
+    setIsBookmarked(getSavedBookIds().includes(book.id));
+  }, [book.id]);
+
+  const handleToggleBookmark = () => {
+    const nextSaved = toggleSavedBook(book.id);
+    setIsBookmarked(nextSaved);
+    setSuccessToast(
+      nextSaved
+        ? `Đã lưu cuốn "${book.title}" vào tủ sách cá nhân!`
+        : `Đã bỏ lưu cuốn "${book.title}".`
+    );
+    setTimeout(() => setSuccessToast(null), 3500);
+  };
 
   const isUnavailable = !book.available || (book.availableCopies !== undefined && book.availableCopies <= 0);
 
@@ -490,7 +526,7 @@ export default function BookDetailPage({ params }: PageProps) {
                   size="md"
                   fullWidth
                   icon={isBookmarked ? "bookmark_added" : "bookmark"}
-                  onClick={() => setIsBookmarked(!isBookmarked)}
+                  onClick={handleToggleBookmark}
                 >
                   {isBookmarked ? "Đã lưu vào danh mục của tôi" : "Lưu vào danh mục cá nhân"}
                 </Button>
