@@ -67,22 +67,72 @@ const mockBooks: BookItem[] = [
 ];
 
 export default function OpacSearchPage() {
-  const [searchTerm, setSearchTerm] = useState("Kinh tế học lượng tử");
-  const [searchScope, setSearchScope] = useState("all");
-  const [selectedFormat, setSelectedFormat] = useState("all");
-  const [availabilityOnly, setAvailabilityOnly] = useState(false);
+  
+const [searchTerm, setSearchTerm] = useState("Kinh tế học lượng tử");
+const [searchScope, setSearchScope] = useState("all");
+const [selectedFormat, setSelectedFormat] = useState("all");
+const [availabilityOnly, setAvailabilityOnly] = useState(false);
+
+const [selectedScope, setSelectedScope] = useState("Tất cả kho sách");
+
+const scopes = [
+  "Tất cả kho sách",
+  "Sách in ĐHQG",
+  "CSDL Số Scopus",
+  "Luận án TS",
+  "Bộ sưu tập đặc biệt",
+];
+
 
   const filteredBooks = mockBooks.filter((book) => {
-    const matchTerm =
-      book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (book.callNumber && book.callNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+  const keyword = searchTerm.trim().toLowerCase();
 
-    const matchFormat = selectedFormat === "all" || book.format === selectedFormat;
-    const matchAvail = !availabilityOnly || Boolean(book.available);
+  const title = book.title?.toLowerCase() ?? "";
+  const author = book.author?.toLowerCase() ?? "";
+  const callNumber = book.callNumber?.toLowerCase() ?? "";
+  const isbn = book.isbn?.toLowerCase() ?? "";
+  const publisher = book.publisher?.toLowerCase() ?? "";
+  const format = book.format ?? "";
+  const location = book.location?.toLowerCase() ?? "";
 
-    return matchTerm && matchFormat && matchAvail;
-  });
+  const matchTerm =
+    searchScope === "title"
+      ? title.includes(keyword)
+      : searchScope === "author"
+        ? author.includes(keyword)
+        : searchScope === "isbn"
+          ? isbn.includes(keyword)
+          : searchScope === "ddc"
+            ? callNumber.includes(keyword)
+            : (
+                title.includes(keyword) ||
+                author.includes(keyword) ||
+                callNumber.includes(keyword) ||
+                isbn.includes(keyword)
+              );
+
+  const matchScope =
+    selectedScope === "Tất cả kho sách"
+      ? true
+      : selectedScope === "Sách in ĐHQG"
+        ? format === "Sách in" &&
+          publisher.includes("đại học quốc gia")
+        : selectedScope === "CSDL Số Scopus"
+          ? ["Open Access", "Ebook PDF", "Tạp chí Scopus"].includes(format)
+          : selectedScope === "Luận án TS"
+            ? format === "Luận án TS"
+            : selectedScope === "Bộ sưu tập đặc biệt"
+              ? location.includes("bộ sưu tập đặc biệt")
+              : true;
+
+  const matchFormat =
+    selectedFormat === "all" || format === selectedFormat;
+
+  const matchAvail =
+    !availabilityOnly || Boolean(book.available);
+
+  return matchTerm && matchScope && matchFormat && matchAvail;
+});
 
   return (
     <div className="min-h-screen flex flex-col bg-surface">
@@ -155,22 +205,24 @@ export default function OpacSearchPage() {
 
               {/* Scope Tags */}
               <div className="flex flex-wrap items-center gap-space-xs font-label-md text-label-md pt-2">
-                <span className="text-on-surface-variant">Phạm vi:</span>
-                {["Tất cả kho sách", "Sách in ĐHQG", "CSDL Số Scopus", "Luận án TS", "Bộ sưu tập đặc biệt"].map(
-                  (tag, idx) => (
-                    <button
-                      key={tag}
-                      className={`px-space-sm py-1 rounded-full border transition-colors ${
-                        idx === 0
-                          ? "bg-primary text-on-primary border-primary font-semibold"
-                          : "bg-surface-container-low text-on-surface-variant border-outline-variant/40 hover:bg-surface-container"
-                      }`}
-                    >
-                      {tag}
-                    </button>
-                  )
-                )}
-              </div>
+              <span className="text-on-surface-variant">Phạm vi:</span>
+
+              {scopes.map((tag) => (
+                <button
+                  key={tag}
+                  type="button"
+                  onClick={() => setSelectedScope(tag)}
+                  aria-pressed={selectedScope === tag}
+                  className={`px-space-sm py-1 rounded-full border transition-colors ${
+                    selectedScope === tag
+                      ? "bg-primary text-on-primary border-primary font-semibold"
+                      : "bg-surface-container-low text-on-surface-variant border-outline-variant/40 hover:bg-surface-container"
+                  }`}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
             </div>
           </div>
         </section>

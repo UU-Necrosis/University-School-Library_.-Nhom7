@@ -83,8 +83,9 @@ export const Header: React.FC<HeaderProps> = ({ patron }) => {
   };
 
   const isLoggedIn = authStatus === "authenticated" && Boolean(user);
-  const displayName = user?.name || "";
-  const displayCode = user?.code || "";
+  const displayName = user?.name || patron?.name || "";
+  const displayCode = user?.code || patron?.code || "";
+  const displayUnit = (user as { unit?: string } | null)?.unit || (patron as { unit?: string } | undefined)?.unit || "ĐHQG-HCM";
 
   const isCategoryActive = pathname.startsWith("/danh-muc");
   const isAuthorActive = pathname.startsWith("/tac-gia");
