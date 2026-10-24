@@ -49,53 +49,83 @@ export interface LoginPayload {
   password: string;
 }
 
+async function safeFetchJson<T>(url: string, options: RequestInit): Promise<T> {
+  let res: Response;
+  try {
+    res = await fetch(url, options);
+  } catch (err: any) {
+    throw new AuthApiError(
+      'Không thể kết nối tới máy chủ xác thực. Vui lòng kiểm tra mạng hoặc thử lại sau.',
+      undefined,
+      undefined,
+      0
+    );
+  }
+
+  let data: any;
+  const contentType = res.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    try {
+      data = await res.json();
+    } catch {
+      data = null;
+    }
+  } else {
+    try {
+      const text = await res.text();
+      data = { message: text };
+    } catch {
+      data = null;
+    }
+  }
+
+  if (!res.ok) {
+    const defaultMsg =
+      res.status === 401
+        ? 'Email / Mã độc giả hoặc mật khẩu không chính xác'
+        : res.status === 409
+        ? 'Dữ liệu đã tồn tại trong hệ thống'
+        : res.status >= 500
+        ? 'Lỗi hệ thống máy chủ, vui lòng thử lại sau'
+        : 'Yêu cầu xác thực không thành công';
+
+    throw new AuthApiError(
+      data?.message || defaultMsg,
+      data?.field,
+      data?.errors,
+      res.status
+    );
+  }
+
+  return data as T;
+}
+
 export async function registerApi(payload: RegisterPayload): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE_URL}/auth/register`, {
+  return safeFetchJson<AuthResponse>(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
   });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new AuthApiError(data.message || 'Đăng ký không thành công', data.field, data.errors, res.status);
-  }
-
-  return data;
 }
 
 export async function loginApi(payload: LoginPayload): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+  return safeFetchJson<AuthResponse>(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
   });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new AuthApiError(data.message || 'Đăng nhập không thành công', data.field, data.errors, res.status);
-  }
-
-  return data;
 }
 
 export async function getMeApi(token: string): Promise<{ statusCode: number; data: UserProfile }> {
-  const res = await fetch(`${API_BASE_URL}/auth/me`, {
+  return safeFetchJson<{ statusCode: number; data: UserProfile }>(`${API_BASE_URL}/auth/me`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
   });
-
-  const data = await res.json();
-  if (!res.ok) {
-    throw new AuthApiError(data.message || 'Phiên đăng nhập hết hạn', data.field, data.errors, res.status);
-  }
-
-  return data;
 }

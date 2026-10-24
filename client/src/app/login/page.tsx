@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Badge } from "@/components/ui";
-import { loginApi } from "@/services/auth";
+import { loginApi, AuthApiError } from "@/services/auth";
 import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
@@ -27,6 +27,8 @@ export default function LoginPage() {
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
+
     setError("");
 
     const normalizedInput = email.trim();
@@ -50,8 +52,16 @@ export default function LoginPage() {
         router.push("/");
       }, 150);
     } catch (err: any) {
-      console.error("Lỗi đăng nhập:", err);
-      setError(err?.message || "Email/Mã độc giả hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại.");
+      const isAuthError = err instanceof AuthApiError;
+      if (isAuthError && err.statusCode === 401) {
+        console.warn("Xác thực đăng nhập không thành công (401):", err.message);
+      } else {
+        console.error("Lỗi đăng nhập:", err?.message || String(err));
+      }
+
+      setError(
+        err?.message || "Email / Mã độc giả hoặc mật khẩu không chính xác. Vui lòng kiểm tra lại."
+      );
       setLoading(false);
     }
   }

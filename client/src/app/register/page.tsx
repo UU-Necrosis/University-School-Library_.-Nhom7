@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Badge } from "@/components/ui";
 import { Account } from "@/types/library";
-import { registerApi } from "@/services/auth";
+import { registerApi, AuthApiError } from "@/services/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -52,6 +52,8 @@ export default function RegisterPage() {
 
   async function handleRegister(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
+
     setError("");
     setFieldErrors({});
 
@@ -128,7 +130,13 @@ export default function RegisterPage() {
       setLoading(false);
       setSuccessAccount(newAccount);
     } catch (err: any) {
-      console.error("Lỗi đăng ký:", err);
+      const isExpectedError = err instanceof AuthApiError && (err.statusCode === 409 || err.statusCode === 400);
+      if (isExpectedError) {
+        console.warn("Đăng ký không thành công:", err.message);
+      } else {
+        console.error("Lỗi đăng ký:", err?.message || String(err));
+      }
+
       const errMsg = err?.message || "Không thể khởi tạo tài khoản trong phiên này. Vui lòng thử lại.";
       setError(errMsg);
 
