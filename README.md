@@ -42,3 +42,16 @@ npm run dev
 ```
 
 Truy cập giao diện tại: `http://localhost:3000`
+
+### 🛡️ Bộ Lệnh Kiểm Tra Quy Chuẩn & Biên Dịch (Verification)
+
+```bash
+# Kiểm tra toàn bộ: Boundaries AST -> Typecheck -> ESLint -> Production Build
+npm run validate
+
+# Hoặc chạy từng bước:
+npm run check:boundaries   # Quét AST phát hiện vi phạm ranh giới Server/Client
+npm run typecheck          # Kiểm tra kiểu TypeScript (tsc --noEmit)
+npm run lint               # Linter Next.js & React
+npm run build              # Production build (next build)
+```

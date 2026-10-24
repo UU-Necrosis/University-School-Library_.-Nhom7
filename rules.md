@@ -116,6 +116,16 @@ project-root/
 - **Styling**: Sử dụng **Tailwind CSS**. Hạn chế viết CSS inline hoặc custom style rời rạc nếu Tailwind có sẵn utility class.
 - **Type-Safety**: Khai báo Interface / Type rõ ràng cho tất cả props, state và response từ API.
 - **Quản lý Token**: Lưu trữ JWT token an toàn (HttpOnly Cookies hoặc quản lý tập trung qua interceptor/context).
+- **Quy chuẩn Server/Client Component Boundary & Checklist Bàn Giao**:
+  > *Quy tắc bắt buộc*: "Trước khi thêm hook, event handler, thư viện DOM hoặc browser API, xác định Server/Client Component boundary và kiểm tra các import liên quan. Trước khi bàn giao, chạy kiểm tra biên dịch và thử các route bị ảnh hưởng."
+  - Khi component cần React hooks (`useState`, `useEffect`, `useAuth`, v.v.), event handlers (`onClick`, `onChange`, `onSubmit`), hoặc browser APIs (`window`, `localStorage`), phải đặt chỉ thị `"use client";` ở dòng đầu tiên của file, trước mọi câu lệnh `import`.
+  - Giữ ranh giới Client Component ở phạm vi hẹp nhất cần tương tác; giữ logic xử lý dữ liệu nặng và secrets ở phía Server.
+  - Không xuất `metadata` hoặc `generateMetadata` trong tệp chứa `"use client"`.
+  - Trước khi bàn giao mã nguồn, bắt buộc chạy lệnh kiểm tra toàn diện:
+    ```bash
+    npm run validate
+    ```
+    (Bao gồm: `npm run check:boundaries` -> `npm run typecheck` -> `npm run lint` -> `npm run build`).
 
 ### Backend (NestJS + Prisma):
 - **Validation**: Bắt buộc dùng `DTO (Data Transfer Object)` kết hợp `class-validator` và `ValidationPipe` toàn cục cho tất cả API payload.

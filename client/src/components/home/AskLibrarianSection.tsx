@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 
 export const AskLibrarianSection: React.FC = () => {
   return (
@@ -26,29 +27,29 @@ export const AskLibrarianSection: React.FC = () => {
               </p>
 
               <div className="flex flex-wrap items-center gap-space-md pt-space-xs">
-                <a
+                <Link
                   href="/danh-muc"
                   className="inline-flex items-center gap-space-xs bg-primary hover:bg-secondary text-on-primary px-space-lg py-3 rounded-lg font-title-sm text-title-sm shadow-sm transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">search</span>
                   <span>Tra cứu danh mục sách</span>
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/huong-dan"
                   className="inline-flex items-center gap-space-xs bg-surface-container hover:bg-surface-container-high text-primary px-space-lg py-3 rounded-lg font-title-sm text-title-sm transition-colors"
                 >
                   <span className="material-symbols-outlined text-[20px]">menu_book</span>
                   <span>Xem hướng dẫn mượn sách</span>
-                </a>
+                </Link>
 
-                <a
+                <Link
                   href="/quy-dinh"
                   className="inline-flex items-center gap-space-xs text-secondary hover:underline font-title-sm text-title-sm"
                 >
                   <span className="material-symbols-outlined text-[20px]">policy</span>
                   <span>Quy định thư viện</span>
-                </a>
+                </Link>
               </div>
             </div>
 

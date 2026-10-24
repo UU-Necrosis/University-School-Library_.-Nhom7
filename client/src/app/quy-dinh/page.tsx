@@ -272,7 +272,7 @@ export default function LibraryRegulationsPage() {
                   <div>
                     <h4 className="font-bold text-primary mb-0.5">Điều kiện cho phép đặt trước:</h4>
                     <p className="text-on-surface-variant text-xs leading-relaxed">
-                      Chỉ cho phép độc giả bấm "Đặt trước" khi toàn bộ bản sao vật lý của đầu sách đó đều đang được người khác mượn (<code>availableCopies = 0</code>). Nếu sách đang còn trên kệ, hệ thống yêu cầu độc giả đến mượn trực tiếp mà không cần đặt trước.
+                      Chỉ cho phép độc giả bấm &quot;Đặt trước&quot; khi toàn bộ bản sao vật lý của đầu sách đó đều đang được người khác mượn (<code>availableCopies = 0</code>). Nếu sách đang còn trên kệ, hệ thống yêu cầu độc giả đến mượn trực tiếp mà không cần đặt trước.
                     </p>
                   </div>
                 </div>
@@ -282,7 +282,7 @@ export default function LibraryRegulationsPage() {
                   <div>
                     <h4 className="font-bold text-primary mb-0.5">Hàng đợi FIFO tự động:</h4>
                     <p className="text-on-surface-variant text-xs leading-relaxed">
-                      Độc giả đăng ký đặt trước được xếp vào hàng đợi ưu tiên theo thứ tự thời gian (First In, First Out). Độc giả có thể theo dõi vị trí hàng đợi (#1, #2...) và ngày dự kiến có sách tại trang "Đặt trước của tôi".
+                      Độc giả đăng ký đặt trước được xếp vào hàng đợi ưu tiên theo thứ tự thời gian (First In, First Out). Độc giả có thể theo dõi vị trí hàng đợi (#1, #2...) và ngày dự kiến có sách tại trang &quot;Đặt trước của tôi&quot;.
                     </p>
                   </div>
                 </div>

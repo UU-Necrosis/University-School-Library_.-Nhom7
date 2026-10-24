@@ -752,7 +752,7 @@ export default function BookDetailPage({ params }: PageProps) {
                   <div className="p-space-md bg-surface-container-low rounded-lg border border-outline-variant/30 space-y-1">
                     <span className="font-label-sm text-label-sm font-bold text-secondary uppercase">IEEE Format</span>
                     <p className="font-mono text-xs text-on-surface">
-                      {book.author}, "{book.title}," {book.publisher || "ĐHQG-HCM"}, {book.year}.
+                      {book.author}, &quot;{book.title},&quot; {book.publisher || "ĐHQG-HCM"}, {book.year}.
                     </p>
                   </div>
                 </div>
