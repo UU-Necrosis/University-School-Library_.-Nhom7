@@ -10,6 +10,7 @@ Dự án phát triển Hệ thống Quản lý Thư viện và Cổng Tri thức
 
 ## 🎨 Design System & Color Palette
 - **Quy chuẩn cố định**: [design.md](design.md)
+- **Thiết kế & Đặc tả API**: [docs/api-design.md](docs/api-design.md)
 - **Tiêu chuẩn kiến trúc**: [rules.md](rules.md)
 
 ---
